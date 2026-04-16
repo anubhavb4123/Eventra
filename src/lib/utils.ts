@@ -64,7 +64,7 @@ export function exportTeamsToCSV(teams: Array<{ id: string } & Team>, eventId: s
     const memberNames = team.members.map((m) => m.name).join(' | ');
     const attendanceStatus = team.attendanceMarked ? 'Present' : 'Absent';
     const registeredAt = team.createdAt
-      ? new Date(team.createdAt.toMillis()).toLocaleString()
+      ? new Date(team.createdAt).toLocaleString()
       : 'N/A';
 
     rows.push([
