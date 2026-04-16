@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { ref, get } from 'firebase/database';
 import { db } from '@/lib/firebase';
+import { withRetry } from '@/lib/db-retry';
 import type { TeamWithId, EventDetails as EventDetailsType, DashboardStats } from '@/types';
 import { exportTeamsToCSV } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
@@ -48,13 +49,21 @@ export const Dashboard: React.FC = () => {
     setLoading(true);
     try {
       const [detailsSnap, teamsSnap] = await Promise.all([
-        getDoc(doc(db, 'events', eventId, 'details', 'info')),
-        getDocs(collection(db, 'events', eventId, 'teams')),
+        withRetry(() => get(ref(db, `events/${eventId}/details`))),
+        withRetry(() => get(ref(db, `events/${eventId}/teams`))),
       ]);
 
-      if (detailsSnap.exists()) setEventDetails(detailsSnap.data() as EventDetailsType);
+      if (detailsSnap.exists()) setEventDetails(detailsSnap.val() as EventDetailsType);
 
-      const teamList: TeamWithId[] = teamsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as TeamWithId));
+      const teamsData = teamsSnap.val();
+      const teamList: TeamWithId[] = [];
+      
+      if (teamsData) {
+        Object.keys(teamsData).forEach((id) => {
+          teamList.push({ id, ...teamsData[id] } as TeamWithId);
+        });
+      }
+      
       teamList.sort((a, b) => a.id.localeCompare(b.id));
       setTeams(teamList);
 
@@ -64,7 +73,7 @@ export const Dashboard: React.FC = () => {
       setStats({ totalTeams: teamList.length, presentTeams, totalMembers, presentMembers });
       setLastRefreshed(new Date());
     } catch (err) {
-      console.error(err);
+      console.error('Dashboard Load Error:', err);
     } finally {
       setLoading(false);
     }
@@ -101,11 +110,11 @@ export const Dashboard: React.FC = () => {
     setLookupError('');
     setLookupTeam(null);
     try {
-      const snap = await getDoc(doc(db, 'events', evId, 'teams', trimmed));
+      const snap = await withRetry(() => get(ref(db, `events/${evId}/teams/${trimmed}`)));
       if (!snap.exists()) { setLookupError(`No team found with ID "${trimmed}".`); return; }
-      setLookupTeam({ id: snap.id, ...snap.data() } as TeamWithId);
+      setLookupTeam({ id: snap.key!, ...snap.val() } as TeamWithId);
     } catch (err) {
-      console.error(err);
+      console.error('Lookup Error:', err);
       setLookupError('Lookup failed. Check your connection.');
     } finally {
       setLookupLoading(false);

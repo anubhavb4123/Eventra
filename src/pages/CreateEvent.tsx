@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, get, set, serverTimestamp } from 'firebase/database';
 import { db } from '@/lib/firebase';
+import { withRetry } from '@/lib/db-retry';
 import { APPROVAL_KEY } from '@/lib/constants';
 import { hashPassword, isValidEventId } from '@/lib/utils';
 import { GlassCard } from '@/components/GlassCard';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
-import { Key, Hash, Lock, Zap, CheckCircle } from 'lucide-react';
+import { Key, Hash, Lock, Zap, CheckCircle, WifiOff, AlertCircle } from 'lucide-react';
 
 export const CreateEvent: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,21 @@ export const CreateEvent: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'form' | 'success'>('form');
   const [createdEventId, setCreatedEventId] = useState('');
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // Monitor connectivity for UI hints
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
@@ -33,9 +49,12 @@ export const CreateEvent: React.FC = () => {
     setLoading(true);
 
     try {
-      // Check uniqueness
-      const eventRef = doc(db, 'events', form.eventId);
-      const existing = await getDoc(eventRef);
+      const eventIdClean = form.eventId.trim().toLowerCase();
+      const eventRef = ref(db, `events/${eventIdClean}`);
+
+      // Check uniqueness using RTDB 'get' with retry
+      const existing = await withRetry(() => get(eventRef));
+
       if (existing.exists()) {
         setErrors((prev) => ({ ...prev, eventId: 'This Event ID is already taken. Choose another.' }));
         setLoading(false);
@@ -43,17 +62,25 @@ export const CreateEvent: React.FC = () => {
       }
 
       const passwordHash = await hashPassword(form.password);
-      await setDoc(eventRef, {
+
+      // Create event using RTDB 'set' with retry
+      await withRetry(() => set(eventRef, {
         passwordHash,
         createdAt: serverTimestamp(),
         teamCount: 0,
-      });
+      }));
 
-      setCreatedEventId(form.eventId);
+      setCreatedEventId(eventIdClean);
       setStep('success');
-    } catch (err) {
-      console.error(err);
-      setErrors({ submit: 'Failed to create event. Check your Firebase config.' });
+    } catch (err: any) {
+      console.error('Create Event Error:', err);
+      const isNetworkError = !navigator.onLine || err.message?.includes('offline') || err.code === 'PERMISSION_DENIED';
+
+      setErrors({
+        submit: isNetworkError
+          ? 'Network error: Please check your internet connection or database configuration.'
+          : 'Failed to create event. Details: ' + (err.message || 'Unknown error'),
+      });
     } finally {
       setLoading(false);
     }
@@ -99,6 +126,21 @@ export const CreateEvent: React.FC = () => {
   return (
     <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.5rem' }}>
       <div style={{ maxWidth: 520, width: '100%' }}>
+        {/* Network Warning Banner */}
+        {!isOnline && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '0.75rem',
+            padding: '0.75rem 1rem', background: 'rgba(248,113,113,0.1)',
+            border: '1px solid rgba(248,113,113,0.3)', borderRadius: '0.75rem',
+            marginBottom: '1.5rem', animation: 'fadeIn 0.3s ease forwards',
+          }}>
+            <WifiOff size={18} color="#F87171" strokeWidth={2.5} />
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#F87171', margin: 0, fontWeight: 600 }}>
+              You are currently offline. Actions may fail.
+            </p>
+          </div>
+        )}
+
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <h1 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '2.75rem', fontWeight: 700, color: '#EAEAEA', marginBottom: '0.5rem' }}>
@@ -194,9 +236,16 @@ export const CreateEvent: React.FC = () => {
             </div>
 
             {errors.submit && (
-              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#F87171', textAlign: 'center', padding: '0.75rem', background: 'rgba(248,113,113,0.08)', borderRadius: '0.5rem', border: '1px solid rgba(248,113,113,0.2)' }}>
-                {errors.submit}
-              </p>
+              <div style={{
+                display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
+                padding: '1rem', background: 'rgba(248,113,113,0.08)',
+                border: '1px solid rgba(248,113,113,0.2)', borderRadius: '0.75rem'
+              }}>
+                <AlertCircle size={18} color="#F87171" style={{ marginTop: '0.1rem', flexShrink: 0 }} />
+                <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#F87171', margin: 0, lineHeight: 1.5 }}>
+                  {errors.submit}
+                </p>
+              </div>
             )}
 
             <Button type="submit" loading={loading} fullWidth icon={<Zap size={16} />}>
