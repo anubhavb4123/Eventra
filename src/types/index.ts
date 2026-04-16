@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+// Database timestamps in RTDB are stored as numbers (ms since epoch)
 
 // ============================================================
 // Event Types
@@ -6,7 +6,7 @@ import { Timestamp } from 'firebase/firestore';
 
 export interface EventData {
   passwordHash: string;
-  createdAt: Timestamp;
+  createdAt: number;
   teamCount: number;
 }
 
@@ -39,7 +39,7 @@ export interface Team {
   email?: string;
   members: TeamMember[];
   attendanceMarked: boolean;
-  createdAt: Timestamp;
+  createdAt: number;
 }
 
 export interface TeamWithId extends Team {

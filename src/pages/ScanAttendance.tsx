@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { ref, get, update } from 'firebase/database';
 import { db } from '@/lib/firebase';
+import { withRetry } from '@/lib/db-retry';
 import type { TeamWithId } from '@/types';
 import { GlassCard } from '@/components/GlassCard';
 import { QRScanner } from '@/components/QRScanner';
@@ -41,14 +42,14 @@ export const ScanAttendance: React.FC = () => {
         return;
       }
 
-      const teamSnap = await getDoc(doc(db, 'events', scannedEventId, 'teams', scannedTeamId));
+      const teamSnap = await withRetry(() => get(ref(db, `events/${scannedEventId}/teams/${scannedTeamId}`)));
       if (!teamSnap.exists()) {
-        setErrorMsg(`Team "${scannedTeamId}" not found in Firestore.`);
+        setErrorMsg(`Team "${scannedTeamId}" not found in database.`);
         setScanState('error');
         return;
       }
 
-      const teamData = { id: teamSnap.id, ...teamSnap.data() } as TeamWithId;
+      const teamData = { id: teamSnap.key!, ...teamSnap.val() } as TeamWithId;
 
       if (teamData.attendanceMarked) {
         setTeam(teamData);
@@ -60,7 +61,7 @@ export const ScanAttendance: React.FC = () => {
       setMemberPresence(teamData.members.map(() => true)); // default all present
       setScanState('found');
     } catch (err) {
-      console.error(err);
+      console.error('Scan Error:', err);
       setErrorMsg('Failed to fetch team data. Check your connection.');
       setScanState('error');
     }
@@ -75,14 +76,14 @@ export const ScanAttendance: React.FC = () => {
         present: memberPresence[i],
       }));
 
-      await updateDoc(doc(db, 'events', eventId, 'teams', team.id), {
+      await withRetry(() => update(ref(db, `events/${eventId}/teams/${team.id}`), {
         attendanceMarked: true,
         members: updatedMembers,
-      });
+      }));
 
       setScanState('success');
     } catch (err) {
-      console.error(err);
+      console.error('Attendance Save Error:', err);
       setErrorMsg('Failed to save attendance. Please try again.');
       setScanState('error');
     } finally {
