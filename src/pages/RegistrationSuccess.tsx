@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { ref, get } from 'firebase/database';
 import { db } from '@/lib/firebase';
+import { withRetry } from '@/lib/db-retry';
 import { GlassCard } from '@/components/GlassCard';
 import { QRCodeDisplay } from '@/components/QRCodeDisplay';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -17,10 +18,10 @@ export const RegistrationSuccess: React.FC = () => {
     const load = async () => {
       if (!eventId || !teamId) return;
       try {
-        const snap = await getDoc(doc(db, 'events', eventId, 'teams', teamId));
-        if (snap.exists()) setTeamName(snap.data().teamName);
+        const snap = await withRetry(() => get(ref(db, `events/${eventId}/teams/${teamId}`)));
+        if (snap.exists()) setTeamName(snap.val().teamName);
       } catch (e) {
-        console.error(e);
+        console.error('Load Registration Success Error:', e);
       } finally {
         setLoading(false);
         setTimeout(() => setConfettiDone(true), 100);

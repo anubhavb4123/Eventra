@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  doc, getDoc, setDoc, updateDoc, increment, collection, getDocs
-} from 'firebase/firestore';
+import { ref, get, set, runTransaction, serverTimestamp } from 'firebase/database';
 import { db } from '@/lib/firebase';
 import { generateTeamId, formatDate } from '@/lib/utils';
+import { withRetry } from '@/lib/db-retry';
 import { GlassCard } from '@/components/GlassCard';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
@@ -36,20 +35,22 @@ export const Register: React.FC = () => {
       if (!eventId) return;
       try {
         const [eventSnap, detailsSnap] = await Promise.all([
-          getDoc(doc(db, 'events', eventId)),
-          getDoc(doc(db, 'events', eventId, 'details', 'info')),
+          withRetry(() => get(ref(db, `events/${eventId}`))),
+          withRetry(() => get(ref(db, `events/${eventId}/details`))),
         ]);
+        
         if (!eventSnap.exists() || !detailsSnap.exists()) {
           setNotFound(true);
           return;
         }
-        const d = detailsSnap.data() as EventDetailsType;
+        
+        const d = detailsSnap.val() as EventDetailsType;
         setEventDetails(d);
         if (d.registrationDeadline && new Date(d.registrationDeadline) < new Date()) {
           setDeadlinePassed(true);
         }
       } catch (err) {
-        console.error(err);
+        console.error('Load Event Error:', err);
         setNotFound(true);
       } finally {
         setLoadingEvent(false);
@@ -84,10 +85,19 @@ export const Register: React.FC = () => {
     if (!validateForm() || !eventId) return;
     setSubmitting(true);
     try {
-      const eventRef = doc(db, 'events', eventId);
-      const eventSnap = await getDoc(eventRef);
-      const currentCount = (eventSnap.data()?.teamCount ?? 0) + 1;
-      const teamId = generateTeamId(eventId, currentCount);
+      const eventRef = ref(db, `events/${eventId}`);
+      
+      // Atomic increment for teamCount using transaction
+      const transactionResult = await runTransaction(ref(db, `events/${eventId}/teamCount`), (current) => {
+        return (current || 0) + 1;
+      });
+
+      if (!transactionResult.committed) {
+        throw new Error('Transaction failed');
+      }
+
+      const newCount = transactionResult.snapshot.val();
+      const teamId = generateTeamId(eventId, newCount);
 
       // Build members list with leader first
       const allMembers = [
@@ -95,22 +105,19 @@ export const Register: React.FC = () => {
         ...members.map((m) => ({ ...m, present: false })),
       ];
 
-      await Promise.all([
-        setDoc(doc(db, 'events', eventId, 'teams', teamId), {
-          teamName,
-          leader,
-          email: email || null,
-          members: allMembers,
-          attendanceMarked: false,
-          createdAt: new Date(),
-        }),
-        updateDoc(eventRef, { teamCount: increment(1) }),
-      ]);
+      await withRetry(() => set(ref(db, `events/${eventId}/teams/${teamId}`), {
+        teamName,
+        leader,
+        email: email || null,
+        members: allMembers,
+        attendanceMarked: false,
+        createdAt: serverTimestamp(),
+      }));
 
       navigate(`/registration-success/${eventId}/${teamId}`);
     } catch (err) {
-      console.error(err);
-      setErrors({ submit: 'Registration failed. Please try again.' });
+      console.error('Registration Error:', err);
+      setErrors({ submit: 'Registration failed. Please check your connection and try again.' });
     } finally {
       setSubmitting(false);
     }
