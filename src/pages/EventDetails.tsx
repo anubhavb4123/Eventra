@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { ref, get, set } from 'firebase/database';
 import { db } from '@/lib/firebase';
+import { withRetry } from '@/lib/db-retry';
 import { GlassCard } from '@/components/GlassCard';
 import { Input } from '@/components/Input';
 import { Textarea } from '@/components/Textarea';
@@ -36,10 +37,9 @@ export const EventDetails: React.FC = () => {
       if (!eventId) return;
       setLoading(true);
       try {
-        const ref = doc(db, 'events', eventId, 'details', 'info');
-        const snap = await getDoc(ref);
+        const snap = await withRetry(() => get(ref(db, `events/${eventId}/details`)));
         if (snap.exists()) {
-          const data = snap.data();
+          const data = snap.val();
           setForm({
             eventName: data.eventName ?? '',
             description: data.description ?? '',
@@ -53,7 +53,7 @@ export const EventDetails: React.FC = () => {
           setExisting(true);
         }
       } catch (err) {
-        console.error(err);
+        console.error('Fetch Details Error:', err);
       } finally {
         setLoading(false);
       }
@@ -77,7 +77,7 @@ export const EventDetails: React.FC = () => {
     if (!validate() || !eventId) return;
     setSaving(true);
     try {
-      await setDoc(doc(db, 'events', eventId, 'details', 'info'), {
+      await withRetry(() => set(ref(db, `events/${eventId}/details`), {
         eventName: form.eventName,
         description: form.description,
         dateTime: form.dateTime,
@@ -86,11 +86,11 @@ export const EventDetails: React.FC = () => {
         venue: form.venue,
         registrationDeadline: form.registrationDeadline,
         paymentLink: form.paymentLink || null,
-      });
+      }));
       setSaved(true);
       setExisting(true);
     } catch (err) {
-      console.error(err);
+      console.error('Save Details Error:', err);
     } finally {
       setSaving(false);
     }

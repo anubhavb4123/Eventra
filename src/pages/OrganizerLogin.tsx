@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { ref, get } from 'firebase/database';
 import { db } from '@/lib/firebase';
 import { verifyPassword } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { withRetry } from '@/lib/db-retry';
 import { GlassCard } from '@/components/GlassCard';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
@@ -31,12 +32,17 @@ export const OrganizerLogin: React.FC = () => {
 
     setLoading(true);
     try {
-      const snap = await getDoc(doc(db, 'events', eventId.trim().toLowerCase()));
+      const cleanId = eventId.trim().toLowerCase();
+      const eventRef = ref(db, `events/${cleanId}`);
+      
+      const snap = await withRetry(() => get(eventRef));
+      
       if (!snap.exists()) {
         setErrors({ eventId: 'Event not found. Check the Event ID.' });
         return;
       }
-      const { passwordHash } = snap.data();
+      
+      const { passwordHash } = snap.val();
       const valid = await verifyPassword(password, passwordHash);
       if (!valid) {
         setErrors({ password: 'Incorrect password.' });
@@ -44,7 +50,6 @@ export const OrganizerLogin: React.FC = () => {
       }
 
       // Persist session
-      const cleanId = eventId.trim().toLowerCase();
       login(cleanId);
 
       // Navigate to dashboard (or originally requested page)
