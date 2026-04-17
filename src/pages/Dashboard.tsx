@@ -10,13 +10,14 @@ import { GlassCard } from '@/components/GlassCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { QRCodeDisplay } from '@/components/QRCodeDisplay';
+import { EmailPanel } from '@/components/EmailPanel';
 import {
   Users, UserCheck, RefreshCw, Download, ScanLine, Search,
   ChevronDown, ChevronUp, Settings, AlertCircle, Copy,
-  CheckCheck, LinkIcon, LogOut, Lock,
+  CheckCheck, LinkIcon, LogOut, Lock, Mail
 } from 'lucide-react';
 
-type DashboardTab = 'teams' | 'lookup';
+type DashboardTab = 'teams' | 'lookup' | 'email';
 
 export const Dashboard: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -59,8 +60,10 @@ export const Dashboard: React.FC = () => {
       const teamList: TeamWithId[] = [];
       
       if (teamsData) {
-        Object.keys(teamsData).forEach((id) => {
-          teamList.push({ id, ...teamsData[id] } as TeamWithId);
+        Object.keys(teamsData).forEach((teamCode) => {
+          const tData = teamsData[teamCode];
+          const fullId = tData.teamId || `${eventId}-${teamCode}`;
+          teamList.push({ id: fullId, ...tData } as TeamWithId);
         });
       }
       
@@ -103,6 +106,7 @@ export const Dashboard: React.FC = () => {
     const trimmed = lookupId.trim();
     if (!trimmed) { setLookupError('Enter a Team ID.'); return; }
     const evId = parseEventIdFromTeam(trimmed);
+    const teamCode = trimmed.split('-').pop() || trimmed;
     if (!evId) { setLookupError('Invalid Team ID format. Expected e.g. hackathon2026-T01'); return; }
     if (evId !== eventId) { setLookupError(`That team belongs to event "${evId}", not "${eventId}".`); return; }
 
@@ -110,9 +114,9 @@ export const Dashboard: React.FC = () => {
     setLookupError('');
     setLookupTeam(null);
     try {
-      const snap = await withRetry(() => get(ref(db, `events/${evId}/teams/${trimmed}`)));
+      const snap = await withRetry(() => get(ref(db, `events/${evId}/teams/${teamCode}`)));
       if (!snap.exists()) { setLookupError(`No team found with ID "${trimmed}".`); return; }
-      setLookupTeam({ id: snap.key!, ...snap.val() } as TeamWithId);
+      setLookupTeam({ id: trimmed, ...snap.val() } as TeamWithId);
     } catch (err) {
       console.error('Lookup Error:', err);
       setLookupError('Lookup failed. Check your connection.');
@@ -294,6 +298,9 @@ export const Dashboard: React.FC = () => {
         <TabBtn active={tab === 'lookup'} onClick={() => setTab('lookup')}>
           <Search size={13} /> Team Lookup
         </TabBtn>
+        <TabBtn active={tab === 'email'} onClick={() => setTab('email')}>
+          <Mail size={13} /> Broadcast
+        </TabBtn>
       </div>
 
       {/* ── TEAMS TAB ──────────────────────────────────────────────────── */}
@@ -466,6 +473,11 @@ export const Dashboard: React.FC = () => {
             </GlassCard>
           )}
         </div>
+      )}
+
+      {/* ── EMAIL BROADCAST TAB ────────────────────────────────────────── */}
+      {tab === 'email' && (
+        <EmailPanel teams={teams} />
       )}
     </div>
   );
