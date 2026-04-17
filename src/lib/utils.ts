@@ -51,6 +51,12 @@ export async function copyToClipboard(text: string): Promise<void> {
   }
 }
 
+// Format email to be safe as a Firebase Realtime Database key.
+// Firebase keys cannot contain '.', '#', '$', '[', or ']'.
+export const formatEmailForDb = (email: string): string => {
+  return email.toLowerCase().replace(/\./g, ',');
+};
+
 // ============================================================
 // CSV Export
 // ============================================================
