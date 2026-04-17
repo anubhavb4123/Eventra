@@ -10,6 +10,7 @@ import { RegistrationSuccess } from '@/pages/RegistrationSuccess';
 import { OrganizerLogin } from '@/pages/OrganizerLogin';
 import { Dashboard } from '@/pages/Dashboard';
 import { ScanAttendance } from '@/pages/ScanAttendance';
+import { Ticket } from '@/pages/Ticket';
 
 const App: React.FC = () => {
   return (
@@ -25,6 +26,7 @@ const App: React.FC = () => {
               but is intentionally not linked anywhere in the public UI. */}
           <Route path="register/:eventId" element={<Register />} />
           <Route path="registration-success/:eventId/:teamId" element={<RegistrationSuccess />} />
+          <Route path="ticket/:eventId/:teamId" element={<Ticket />} />
 
           {/* ── Protected routes (organizer login required) ────── */}
           <Route
