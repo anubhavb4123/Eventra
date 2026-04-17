@@ -8,7 +8,7 @@ import { Input } from '@/components/Input';
 import { Textarea } from '@/components/Textarea';
 import { Button } from '@/components/Button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { Calendar, MapPin, Users, LinkIcon, FileText, Copy, CheckCheck, Zap } from 'lucide-react';
+import { Calendar, MapPin, Users, LinkIcon, FileText, Copy, CheckCheck, Zap, ShieldAlert } from 'lucide-react';
 
 export const EventDetails: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -27,6 +27,8 @@ export const EventDetails: React.FC = () => {
     venue: '',
     registrationDeadline: '',
     paymentLink: '',
+    registrationOpen: true,
+    maxTeams: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -37,9 +39,15 @@ export const EventDetails: React.FC = () => {
       if (!eventId) return;
       setLoading(true);
       try {
-        const snap = await withRetry(() => get(ref(db, `events/${eventId}/details`)));
-        if (snap.exists()) {
-          const data = snap.val();
+        const [detailsSnap, settingsSnap] = await Promise.all([
+          withRetry(() => get(ref(db, `events/${eventId}/details`))),
+          withRetry(() => get(ref(db, `events/${eventId}/eventSettings`)))
+        ]);
+
+        if (detailsSnap.exists() || settingsSnap.exists()) {
+          const data = detailsSnap.val() || {};
+          const settings = settingsSnap.val() || {};
+          
           setForm({
             eventName: data.eventName ?? '',
             description: data.description ?? '',
@@ -47,8 +55,10 @@ export const EventDetails: React.FC = () => {
             teamSizeMin: String(data.teamSizeMin ?? 1),
             teamSizeMax: String(data.teamSizeMax ?? 5),
             venue: data.venue ?? '',
-            registrationDeadline: data.registrationDeadline ?? '',
+            registrationDeadline: settings.registrationDeadline ?? data.registrationDeadline ?? '',
             paymentLink: data.paymentLink ?? '',
+            registrationOpen: settings.registrationOpen ?? true,
+            maxTeams: settings.maxTeams ? String(settings.maxTeams) : '',
           });
           setExisting(true);
         }
@@ -77,16 +87,29 @@ export const EventDetails: React.FC = () => {
     if (!validate() || !eventId) return;
     setSaving(true);
     try {
-      await withRetry(() => set(ref(db, `events/${eventId}/details`), {
-        eventName: form.eventName,
-        description: form.description,
-        dateTime: form.dateTime,
-        teamSizeMin: Number(form.teamSizeMin),
-        teamSizeMax: Number(form.teamSizeMax),
-        venue: form.venue,
-        registrationDeadline: form.registrationDeadline,
-        paymentLink: form.paymentLink || null,
-      }));
+      // Get current settings to preserve currentTeams or initialize it
+      const settingsSnap = await withRetry(() => get(ref(db, `events/${eventId}/eventSettings`)));
+      const currentSettings = settingsSnap.val() || { currentTeams: 0 };
+
+      await Promise.all([
+        withRetry(() => set(ref(db, `events/${eventId}/details`), {
+          eventName: form.eventName,
+          description: form.description,
+          dateTime: form.dateTime,
+          teamSizeMin: Number(form.teamSizeMin),
+          teamSizeMax: Number(form.teamSizeMax),
+          venue: form.venue,
+          paymentLink: form.paymentLink || null,
+        })),
+        withRetry(() => set(ref(db, `events/${eventId}/eventSettings`), {
+          ...currentSettings,
+          registrationOpen: form.registrationOpen,
+          registrationDeadline: form.registrationDeadline || null,
+          maxTeams: form.maxTeams ? Number(form.maxTeams) : null,
+          currentTeams: currentSettings.currentTeams || 0,
+        }))
+      ]);
+
       setSaved(true);
       setExisting(true);
     } catch (err) {
@@ -193,6 +216,39 @@ export const EventDetails: React.FC = () => {
               type="datetime-local"
               value={form.registrationDeadline}
               onChange={(e) => setForm((f) => ({ ...f, registrationDeadline: e.target.value }))}
+            />
+          </div>
+
+          {/* Registration Control */}
+          <SectionHeader icon={<ShieldAlert size={14} color="#C6A969" />} title="Registration Control" />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'end' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#EAEAEA' }}>
+                Status
+              </label>
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, registrationOpen: !f.registrationOpen }))}
+                style={{
+                  padding: '0.8rem', borderRadius: '0.75rem', cursor: 'pointer',
+                  border: form.registrationOpen ? '1px solid rgba(74,222,128,0.3)' : '1px solid rgba(248,113,113,0.3)',
+                  background: form.registrationOpen ? 'rgba(74,222,128,0.1)' : 'rgba(248,113,113,0.1)',
+                  color: form.registrationOpen ? '#4ADE80' : '#F87171',
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8rem', fontWeight: 600,
+                  transition: 'all 0.2s', textAlign: 'center'
+                }}
+              >
+                {form.registrationOpen ? 'Registration Open' : 'Registration Closed'}
+              </button>
+            </div>
+            
+            <Input
+              id="maxTeams"
+              label="Max Teams Capacity"
+              type="number"
+              placeholder="e.g. 50 (Leave empty for no limit)"
+              value={form.maxTeams}
+              onChange={(e) => setForm(f => ({ ...f, maxTeams: e.target.value }))}
             />
           </div>
 
