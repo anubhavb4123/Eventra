@@ -21,6 +21,7 @@ export const ScanAttendance: React.FC = () => {
   const [memberPresence, setMemberPresence] = useState<boolean[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
   const [saving, setSaving] = useState(false);
+  const [manualId, setManualId] = useState('');
 
   const handleScanSuccess = async (decoded: string) => {
     if (scanState !== 'scanning') return;
@@ -35,6 +36,7 @@ export const ScanAttendance: React.FC = () => {
       }
 
       const [scannedEventId, scannedTeamId] = parts;
+      const teamCode = scannedTeamId.split('-').pop() || scannedTeamId;
 
       if (scannedEventId !== eventId) {
         setErrorMsg(`QR belongs to a different event: "${scannedEventId}". Expected: "${eventId}".`);
@@ -42,14 +44,14 @@ export const ScanAttendance: React.FC = () => {
         return;
       }
 
-      const teamSnap = await withRetry(() => get(ref(db, `events/${scannedEventId}/teams/${scannedTeamId}`)));
+      const teamSnap = await withRetry(() => get(ref(db, `events/${scannedEventId}/teams/${teamCode}`)));
       if (!teamSnap.exists()) {
         setErrorMsg(`Team "${scannedTeamId}" not found in database.`);
         setScanState('error');
         return;
       }
 
-      const teamData = { id: teamSnap.key!, ...teamSnap.val() } as TeamWithId;
+      const teamData = { id: scannedTeamId, ...teamSnap.val() } as TeamWithId;
 
       if (teamData.attendanceMarked) {
         setTeam(teamData);
@@ -76,7 +78,8 @@ export const ScanAttendance: React.FC = () => {
         present: memberPresence[i],
       }));
 
-      await withRetry(() => update(ref(db, `events/${eventId}/teams/${team.id}`), {
+      const teamCode = team.id.split('-').pop() || team.id;
+      await withRetry(() => update(ref(db, `events/${eventId}/teams/${teamCode}`), {
         attendanceMarked: true,
         members: updatedMembers,
       }));
@@ -126,10 +129,41 @@ export const ScanAttendance: React.FC = () => {
       {/* SCANNING STATE */}
       {scanState === 'scanning' && (
         <GlassCard>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#9A9A9A', textAlign: 'center', marginBottom: '1.25rem' }}>
-            Point the camera at a team's QR code to begin.
-          </p>
-          <QRScanner onScanSuccess={handleScanSuccess} qrboxSize={250} />
+          <div style={{ marginBottom: '1.5rem' }}>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#9A9A9A', textAlign: 'center', marginBottom: '1.25rem' }}>
+              Point the camera at a team's QR code to begin.
+            </p>
+            <QRScanner onScanSuccess={handleScanSuccess} qrboxSize={250} />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0' }}>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#6a6a6a', letterSpacing: '0.1em' }}>OR</span>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
+          </div>
+
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (manualId.trim()) handleScanSuccess(`${eventId}|${manualId.trim()}`);
+            }}
+            style={{ display: 'flex', gap: '0.5rem' }}
+          >
+            <input 
+              type="text"
+              placeholder={`e.g. ${eventId}-T01`}
+              className="input-field"
+              value={manualId}
+              onChange={(e) => {
+                setManualId(e.target.value);
+                setErrorMsg('');
+              }}
+              style={{ flex: 1 }}
+            />
+            <Button type="submit" variant="secondary" style={{ flexShrink: 0 }}>
+              Lookup
+            </Button>
+          </form>
         </GlassCard>
       )}
 
