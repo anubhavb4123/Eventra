@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ref, get } from 'firebase/database';
+import { ref, get, update } from 'firebase/database';
 import { db } from '@/lib/firebase';
 import { withRetry } from '@/lib/db-retry';
 import { GlassCard } from '@/components/GlassCard';
-import { QRCodeDisplay } from '@/components/QRCodeDisplay';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Home } from 'lucide-react';
+import { sendRegistrationEmail } from '@/lib/email';
+import { TicketCard } from '@/components/TicketCard';
+import type { TeamWithId, EventDetails as EventDetailsType } from '@/types';
 
 export const RegistrationSuccess: React.FC = () => {
   const { eventId, teamId } = useParams<{ eventId: string; teamId: string }>();
   const [teamName, setTeamName] = useState('');
+  const [team, setTeam] = useState<TeamWithId | null>(null);
+  const [eventDetails, setEventDetails] = useState<EventDetailsType | null>(null);
   const [loading, setLoading] = useState(true);
   const [confettiDone, setConfettiDone] = useState(false);
 
@@ -18,8 +22,38 @@ export const RegistrationSuccess: React.FC = () => {
     const load = async () => {
       if (!eventId || !teamId) return;
       try {
-        const snap = await withRetry(() => get(ref(db, `events/${eventId}/teams/${teamId}`)));
-        if (snap.exists()) setTeamName(snap.val().teamName);
+        const teamCode = teamId.split('-').pop() || teamId;
+        const [snap, detailsSnap] = await Promise.all([
+          withRetry(() => get(ref(db, `events/${eventId}/teams/${teamCode}`))),
+          withRetry(() => get(ref(db, `events/${eventId}/details`)))
+        ]);
+
+        if (snap.exists() && detailsSnap.exists()) {
+          const tData = snap.val();
+          const dData = detailsSnap.val();
+          setTeamName(tData.teamName);
+          setTeam({ id: teamCode, ...tData });
+          setEventDetails(dData);
+
+          if (tData.email && !tData.emailSent) {
+            try {
+              // Mark as sent in DB immediately to prevent duplicate sends on quick reloads
+              await withRetry(() => update(ref(db, `events/${eventId}/teams/${teamCode}`), {
+                emailSent: true
+              }));
+              
+              await sendRegistrationEmail({
+                team_name: tData.teamName,
+                team_id: teamId,
+                event_name: dData.eventName,
+                ticket_link: `${window.location.origin}/ticket/${eventId}/${teamId}`,
+                to_email: tData.email
+              });
+            } catch (err) {
+              console.error("Auto-email failure:", err);
+            }
+          }
+        }
       } catch (e) {
         console.error('Load Registration Success Error:', e);
       } finally {
@@ -91,20 +125,18 @@ export const RegistrationSuccess: React.FC = () => {
           )}
         </div>
 
-        {/* QR Card */}
-        <GlassCard style={{ marginBottom: '1.5rem' }}>
-          <p style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem', color: '#9A9A9A',
-            textAlign: 'center', marginBottom: '1.5rem', letterSpacing: '0.05em',
-          }}>
-            📱 Save your QR code — you'll need it for attendance verification.
-          </p>
-          <QRCodeDisplay
-            value={qrValue}
-            teamId={teamId!}
-            size={220}
-          />
-        </GlassCard>
+        {/* Digital Ticket */}
+        {team && eventDetails && (
+          <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+            <TicketCard 
+              eventId={eventId!} 
+              teamId={teamId!} 
+              team={team} 
+              eventDetails={eventDetails} 
+              qrValue={qrValue} 
+            />
+          </div>
+        )}
 
         {/* Instructions */}
         <GlassCard padding="sm" style={{ marginBottom: '1.5rem' }}>

@@ -8,35 +8,45 @@ import { GlassCard } from '@/components/GlassCard';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import type { EventDetails as EventDetailsType, MemberForm } from '@/types';
+import type { EventDetails as EventDetailsType, EventSettings, MemberForm } from '@/types';
 import {
   Calendar, MapPin, Users, Plus, Trash2, UserPlus, CreditCard, AlertCircle
 } from 'lucide-react';
 
-const emptyMember = (): MemberForm => ({ name: '', rollNumber: '', college: '', branch: '' });
+interface LocalMemberForm extends MemberForm {
+  sameCollegeAsLeader?: boolean;
+}
+
+const emptyMember = (): LocalMemberForm => ({ name: '', rollNumber: '', college: '', branch: '', sameCollegeAsLeader: false });
 
 export const Register: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const [eventDetails, setEventDetails] = useState<EventDetailsType | null>(null);
+  const [eventSettings, setEventSettings] = useState<EventSettings | null>(null);
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [deadlinePassed, setDeadlinePassed] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
 
   const [teamName, setTeamName] = useState('');
   const [leader, setLeader] = useState('');
   const [email, setEmail] = useState('');
-  const [members, setMembers] = useState<MemberForm[]>([emptyMember()]);
+  const [leaderRoll, setLeaderRoll] = useState('');
+  const [leaderCollege, setLeaderCollege] = useState('');
+  const [leaderBranch, setLeaderBranch] = useState('');
+  const [members, setMembers] = useState<LocalMemberForm[]>([emptyMember()]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const loadEvent = async () => {
       if (!eventId) return;
       try {
-        const [eventSnap, detailsSnap] = await Promise.all([
+        const [eventSnap, detailsSnap, settingsSnap] = await Promise.all([
           withRetry(() => get(ref(db, `events/${eventId}`))),
           withRetry(() => get(ref(db, `events/${eventId}/details`))),
+          withRetry(() => get(ref(db, `events/${eventId}/eventSettings`))),
         ]);
         
         if (!eventSnap.exists() || !detailsSnap.exists()) {
@@ -45,8 +55,18 @@ export const Register: React.FC = () => {
         }
         
         const d = detailsSnap.val() as EventDetailsType;
+        const eData = eventSnap.val();
+        // Fallback for older events without eventSettings
+        const s = (settingsSnap.val() || {
+           registrationOpen: true,
+           registrationDeadline: (d as any).registrationDeadline,
+           currentTeams: eData.teamCount || 0
+        }) as EventSettings;
+
         setEventDetails(d);
-        if (d.registrationDeadline && new Date(d.registrationDeadline) < new Date()) {
+        setEventSettings(s);
+        
+        if (s.registrationDeadline && new Date(s.registrationDeadline) < new Date()) {
           setDeadlinePassed(true);
         }
       } catch (err) {
@@ -58,6 +78,30 @@ export const Register: React.FC = () => {
     };
     loadEvent();
   }, [eventId]);
+
+  useEffect(() => {
+    if (!eventSettings?.registrationDeadline) return;
+    const deadline = new Date(eventSettings.registrationDeadline).getTime();
+    
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const distance = deadline - now;
+      if (distance < 0) {
+        setDeadlinePassed(true);
+        setTimeLeft('');
+        return;
+      }
+      const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((distance % (1000 * 60)) / 1000);
+      setTimeLeft(`${d > 0 ? d + 'd ' : ''}${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`);
+    };
+    
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [eventSettings?.registrationDeadline]);
 
   const validateForm = (): boolean => {
     const errs: Record<string, string> = {};
@@ -85,34 +129,71 @@ export const Register: React.FC = () => {
     if (!validateForm() || !eventId) return;
     setSubmitting(true);
     try {
-      const eventRef = ref(db, `events/${eventId}`);
-      
-      // Atomic increment for teamCount using transaction
-      const transactionResult = await runTransaction(ref(db, `events/${eventId}/teamCount`), (current) => {
-        return (current || 0) + 1;
+      if (email) {
+        // Pre-check for duplicate email using utils.ts helper logic imported inline if missing
+        const emailKey = email.toLowerCase().replace(/\./g, ',');
+        const emailSnap = await withRetry(() => get(ref(db, `events/${eventId}/registeredEmails/${emailKey}`)));
+        if (emailSnap.exists()) {
+          setErrors({ submit: 'This email is already registered for this event.' });
+          setSubmitting(false);
+          return;
+        }
+      }
+
+      // Atomic increment for currentTeams using transaction to prevent overbooking
+      const transactionResult = await runTransaction(ref(db, `events/${eventId}/eventSettings/currentTeams`), (current) => {
+        const count = current || 0;
+        if (eventSettings?.maxTeams && count >= eventSettings.maxTeams) {
+          return; // abort transaction by returning undefined
+        }
+        return count + 1;
       });
 
       if (!transactionResult.committed) {
-        throw new Error('Transaction failed');
+        setErrors({ submit: 'Registration full. No more teams can be accepted.' });
+        setSubmitting(false);
+        return;
       }
 
       const newCount = transactionResult.snapshot.val();
       const teamId = generateTeamId(eventId, newCount);
+      const teamCode = teamId.split('-').pop() || teamId;
 
       // Build members list with leader first
       const allMembers = [
-        { name: leader, rollNumber: '', college: '', branch: '', present: false },
-        ...members.map((m) => ({ ...m, present: false })),
+        { name: leader, rollNumber: leaderRoll, college: leaderCollege, branch: leaderBranch, present: false },
+        ...members.map((m) => ({ 
+           name: m.name, 
+           rollNumber: m.rollNumber, 
+           college: m.sameCollegeAsLeader ? leaderCollege : m.college, 
+           branch: m.branch, 
+           present: false 
+        })),
       ];
 
-      await withRetry(() => set(ref(db, `events/${eventId}/teams/${teamId}`), {
+      const updates: any = {};
+      updates[`events/${eventId}/teams/${teamCode}`] = {
+        teamId, // optionally store full teamId
         teamName,
         leader,
         email: email || null,
         members: allMembers,
         attendanceMarked: false,
         createdAt: serverTimestamp(),
-      }));
+      };
+      
+      if (email) {
+         const emailKey = email.toLowerCase().replace(/\./g, ',');
+         updates[`events/${eventId}/registeredEmails/${emailKey}`] = true;
+      }
+
+      await Object.keys(updates).reduce(async (promise, path) => {
+        await promise;
+        const keys = path.split('/');
+        const prop = keys.pop()!;
+        const basePath = keys.join('/');
+        return withRetry(() => set(ref(db, `${basePath}/${prop}`), updates[path]));
+      }, Promise.resolve());
 
       navigate(`/registration-success/${eventId}/${teamId}`);
     } catch (err) {
@@ -132,7 +213,7 @@ export const Register: React.FC = () => {
     setMembers((prev) => prev.filter((_, idx) => idx !== i));
   };
 
-  const updateMember = (i: number, field: keyof MemberForm, value: string) => {
+  const updateMember = (i: number, field: keyof LocalMemberForm, value: string | boolean) => {
     setMembers((prev) => prev.map((m, idx) => idx === i ? { ...m, [field]: value } : m));
   };
 
@@ -178,15 +259,44 @@ export const Register: React.FC = () => {
               {eventDetails?.description}
             </p>
           </div>
-          {deadlinePassed && (
-            <div style={{
-              padding: '0.5rem 1rem', borderRadius: '0.5rem',
-              background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)',
-              fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#F87171',
-            }}>
-              ⚠ Registration Closed
-            </div>
-          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
+            {deadlinePassed && (
+              <div style={{
+                padding: '0.5rem 1rem', borderRadius: '0.5rem',
+                background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)',
+                fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#F87171',
+              }}>
+                ⚠ Registration Closed
+              </div>
+            )}
+            {!deadlinePassed && eventSettings?.registrationOpen === false && (
+              <div style={{
+                padding: '0.5rem 1rem', borderRadius: '0.5rem',
+                background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)',
+                fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#F87171',
+              }}>
+                ⚠ Registration Paused
+              </div>
+            )}
+            {!deadlinePassed && eventSettings?.maxTeams && eventSettings.currentTeams >= eventSettings.maxTeams && (
+              <div style={{
+                padding: '0.5rem 1rem', borderRadius: '0.5rem',
+                background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)',
+                fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#F87171',
+              }}>
+                ⚠ Registration Full
+              </div>
+            )}
+            {timeLeft && (
+              <div style={{
+                padding: '0.5rem 1rem', borderRadius: '0.5rem',
+                background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)',
+                fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#4ADE80',
+              }}>
+                Closes in: {timeLeft}
+              </div>
+            )}
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '2rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
@@ -212,7 +322,7 @@ export const Register: React.FC = () => {
       </GlassCard>
 
       {/* Registration Form */}
-      {!deadlinePassed ? (
+      {(!deadlinePassed && eventSettings?.registrationOpen !== false && (!eventSettings?.maxTeams || eventSettings.currentTeams < eventSettings.maxTeams)) ? (
         <GlassCard>
           <h2 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.75rem', fontWeight: 700, color: '#EAEAEA', marginBottom: '0.5rem' }}>
             Team Registration
@@ -249,6 +359,27 @@ export const Register: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 error={errors.email}
+              />
+              <Input
+                id="leaderRoll"
+                label="Roll Number"
+                placeholder="21CS001"
+                value={leaderRoll}
+                onChange={(e) => setLeaderRoll(e.target.value)}
+              />
+              <Input
+                id="leaderCollege"
+                label="College"
+                placeholder="College name"
+                value={leaderCollege}
+                onChange={(e) => setLeaderCollege(e.target.value)}
+              />
+              <Input
+                id="leaderBranch"
+                label="Branch"
+                placeholder="e.g. CSE, ECE"
+                value={leaderBranch}
+                onChange={(e) => setLeaderBranch(e.target.value)}
               />
             </div>
 
@@ -292,12 +423,27 @@ export const Register: React.FC = () => {
                     value={m.rollNumber}
                     onChange={(e) => updateMember(i, 'rollNumber', e.target.value)}
                   />
+
+                  <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
+                    <input 
+                      type="checkbox" 
+                      id={`same_college_${i}`}
+                      checked={m.sameCollegeAsLeader || false}
+                      onChange={(e) => updateMember(i, 'sameCollegeAsLeader', e.target.checked)}
+                      style={{ accentColor: '#C6A969', width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                    <label htmlFor={`same_college_${i}`} style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8rem', color: '#EAEAEA', cursor: 'pointer' }}>
+                      College same as leader
+                    </label>
+                  </div>
+
                   <Input
                     id={`member_${i}_college`}
                     label="College"
-                    placeholder="College name"
-                    value={m.college}
+                    placeholder={m.sameCollegeAsLeader ? 'Same as leader' : 'College name'}
+                    value={m.sameCollegeAsLeader ? leaderCollege : m.college}
                     onChange={(e) => updateMember(i, 'college', e.target.value)}
+                    disabled={m.sameCollegeAsLeader}
                   />
                   <Input
                     id={`member_${i}_branch`}
@@ -338,7 +484,8 @@ export const Register: React.FC = () => {
             Registration Closed
           </h3>
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8rem', color: '#9A9A9A', marginTop: '0.5rem' }}>
-            The registration deadline for this event has passed.
+            {deadlinePassed ? 'The registration deadline has passed.' : 
+             (eventSettings?.maxTeams && eventSettings.currentTeams >= eventSettings.maxTeams) ? 'The event has reached its maximum capacity.' : 'Registrations are currently paused by the organizer.'}
           </p>
         </GlassCard>
       )}
