@@ -10,6 +10,13 @@ export interface EventData {
   teamCount: number;
 }
 
+export interface EventSettings {
+  registrationOpen: boolean;
+  registrationDeadline?: string;
+  maxTeams?: number;
+  currentTeams: number;
+}
+
 export interface EventDetails {
   eventName: string;
   description: string;
@@ -17,7 +24,6 @@ export interface EventDetails {
   teamSizeMin: number;
   teamSizeMax: number;
   venue: string;
-  registrationDeadline: string;
   paymentLink?: string;
 }
 
