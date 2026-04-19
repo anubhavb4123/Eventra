@@ -14,8 +14,9 @@ import { EmailPanel } from '@/components/EmailPanel';
 import {
   Users, UserCheck, RefreshCw, Download, ScanLine, Search,
   ChevronDown, ChevronUp, Settings, AlertCircle, Copy,
-  CheckCheck, LinkIcon, LogOut, Lock, Mail
+  CheckCheck, LinkIcon, LogOut, Lock, Mail,
 } from 'lucide-react';
+import '@/styles/eventra-shared.css';
 
 type DashboardTab = 'teams' | 'lookup' | 'email';
 
@@ -24,7 +25,6 @@ export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { logout, eventId: sessionEventId } = useAuth();
 
-  // Guard: if the URL eventId doesn't match the session eventId, block access
   const accessDenied = sessionEventId && eventId && sessionEventId !== eventId;
 
   const [tab, setTab] = useState<DashboardTab>('teams');
@@ -37,7 +37,6 @@ export const Dashboard: React.FC = () => {
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [linkCopied, setLinkCopied] = useState(false);
 
-  // Team lookup state
   const [lookupId, setLookupId] = useState('');
   const [lookupTeam, setLookupTeam] = useState<TeamWithId | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -53,12 +52,9 @@ export const Dashboard: React.FC = () => {
         withRetry(() => get(ref(db, `events/${eventId}/details`))),
         withRetry(() => get(ref(db, `events/${eventId}/teams`))),
       ]);
-
       if (detailsSnap.exists()) setEventDetails(detailsSnap.val() as EventDetailsType);
-
       const teamsData = teamsSnap.val();
       const teamList: TeamWithId[] = [];
-      
       if (teamsData) {
         Object.keys(teamsData).forEach((teamCode) => {
           const tData = teamsData[teamCode];
@@ -66,10 +62,8 @@ export const Dashboard: React.FC = () => {
           teamList.push({ id: fullId, ...tData } as TeamWithId);
         });
       }
-      
       teamList.sort((a, b) => a.id.localeCompare(b.id));
       setTeams(teamList);
-
       const totalMembers = teamList.reduce((acc, t) => acc + t.members.length, 0);
       const presentTeams = teamList.filter((t) => t.attendanceMarked).length;
       const presentMembers = teamList.reduce((acc, t) => acc + t.members.filter((m) => m.present).length, 0);
@@ -90,12 +84,8 @@ export const Dashboard: React.FC = () => {
     setTimeout(() => setLinkCopied(false), 2000);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/organizer-login');
-  };
+  const handleLogout = () => { logout(); navigate('/organizer-login'); };
 
-  // Team Lookup
   const parseEventIdFromTeam = (tid: string): string | null => {
     const match = tid.match(/^(.+)-T\d+$/);
     return match ? match[1] : null;
@@ -109,7 +99,6 @@ export const Dashboard: React.FC = () => {
     const teamCode = trimmed.split('-').pop() || trimmed;
     if (!evId) { setLookupError('Invalid Team ID format. Expected e.g. hackathon2026-T01'); return; }
     if (evId !== eventId) { setLookupError(`That team belongs to event "${evId}", not "${eventId}".`); return; }
-
     setLookupLoading(true);
     setLookupError('');
     setLookupTeam(null);
@@ -131,30 +120,24 @@ export const Dashboard: React.FC = () => {
     t.leader.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const statCards = [
-    { label: 'Total Teams', value: stats.totalTeams, icon: <Users size={20} color="#C6A969" />, color: '#C6A969' },
-    { label: 'Present Teams', value: stats.presentTeams, icon: <UserCheck size={20} color="#4ADE80" />, color: '#4ADE80' },
-    { label: 'Total Members', value: stats.totalMembers, icon: <Users size={20} color="#C6A969" />, color: '#C6A969' },
-    { label: 'Present Members', value: stats.presentMembers, icon: <UserCheck size={20} color="#4ADE80" />, color: '#4ADE80' },
-  ];
-
-  // ── Access Denied ───────────────────────────────────────────────────────
+  /* ── Access Denied ─────────────────────────────────────────── */
   if (accessDenied) {
     return (
       <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-        <GlassCard style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
-          <Lock size={40} color="#F87171" style={{ margin: '0 auto 1rem' }} />
-          <h2 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '2rem', color: '#EAEAEA', marginBottom: '0.5rem' }}>
-            Access Denied
-          </h2>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8rem', color: '#9A9A9A', marginBottom: '1.5rem' }}>
-            You are logged in as organizer of <span style={{ color: '#C6A969' }}>{sessionEventId}</span>, not <span style={{ color: '#F87171' }}>{eventId}</span>.
+        <GlassCard style={{ maxWidth: 420, width: '100%', textAlign: 'center' }} padding="xl">
+          <div style={{ width: 64, height: 64, borderRadius: '50%', margin: '0 auto 1.25rem', background: 'rgba(248,113,113,0.08)', border: '2px solid rgba(248,113,113,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Lock size={28} color="#F87171" />
+          </div>
+          <h2 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '2rem', color: '#eaeaea', marginBottom: '0.5rem' }}>Access Denied</h2>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#666', marginBottom: '1.75rem', lineHeight: 1.6 }}>
+            You are logged in as organizer of <span style={{ color: '#C6A969' }}>{sessionEventId}</span>,
+            not <span style={{ color: '#F87171' }}>{eventId}</span>.
           </p>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button className="btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => navigate(`/dashboard/${sessionEventId}`)}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="ev-btn ev-btn-secondary ev-btn-full" onClick={() => navigate(`/dashboard/${sessionEventId}`)}>
               My Dashboard
             </button>
-            <button className="btn-danger" style={{ flex: '0 0 auto' }} onClick={handleLogout}>
+            <button className="ev-btn ev-btn-danger" onClick={handleLogout} style={{ flexShrink: 0 }}>
               <LogOut size={14} /> Switch
             </button>
           </div>
@@ -171,146 +154,122 @@ export const Dashboard: React.FC = () => {
     );
   }
 
+  const attendancePct = stats.totalTeams > 0 ? Math.round((stats.presentTeams / stats.totalTeams) * 100) : 0;
+
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '3rem 1.5rem' }}>
-      {/* ── Header ─────────────────────────────────────────────────────── */}
+      {/* ── Header ──────────────────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-            <span style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#C6A969',
-              padding: '0.2rem 0.65rem', borderRadius: '9999px',
-              background: 'rgba(198,169,105,0.1)', border: '1px solid rgba(198,169,105,0.2)',
-            }}>
-              {eventId}
-            </span>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', color: '#6a6a6a' }}>
-              Last updated: {lastRefreshed.toLocaleTimeString()}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <span className="ev-pill ev-pill-gold">{eventId}</span>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', color: '#444' }}>
+              Updated {lastRefreshed.toLocaleTimeString()}
             </span>
           </div>
-          <h1 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '2.5rem', fontWeight: 700, color: '#EAEAEA' }}>
+          <h1 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: 'clamp(2rem,5vw,2.75rem)', fontWeight: 700, color: '#eaeaea', lineHeight: 1.1, margin: 0 }}>
             {eventDetails?.eventName ?? 'Dashboard'}
           </h1>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button onClick={loadData} className="btn-secondary" style={{ padding: '0.45rem 0.85rem', fontSize: '0.78rem' }}>
-            <RefreshCw size={13} /> Refresh
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button onClick={loadData} className="ev-btn ev-btn-ghost ev-btn-sm" style={{ gap: 6 }}>
+            <RefreshCw size={12} /> Refresh
           </button>
-          <button onClick={() => exportTeamsToCSV(teams, eventId!)} className="btn-secondary" style={{ padding: '0.45rem 0.85rem', fontSize: '0.78rem' }}>
-            <Download size={13} /> CSV
+          <button onClick={() => exportTeamsToCSV(teams, eventId!)} className="ev-btn ev-btn-ghost ev-btn-sm" style={{ gap: 6 }}>
+            <Download size={12} /> CSV
           </button>
           <Link to={`/scan/${eventId}`} style={{ textDecoration: 'none' }}>
-            <button className="btn-primary" style={{ padding: '0.45rem 0.85rem', fontSize: '0.78rem' }}>
-              <ScanLine size={13} /> Scan QR
+            <button className="ev-btn ev-btn-primary ev-btn-sm" style={{ gap: 6 }}>
+              <ScanLine size={12} /> Scan QR
             </button>
           </Link>
           <Link to={`/event-details/${eventId}`} style={{ textDecoration: 'none' }}>
-            <button className="btn-secondary" style={{ padding: '0.45rem 0.75rem', fontSize: '0.78rem' }}>
-              <Settings size={14} />
+            <button className="ev-btn ev-btn-ghost ev-btn-sm" style={{ gap: 6 }}>
+              <Settings size={13} />
             </button>
           </Link>
-          <button onClick={handleLogout} className="btn-danger" style={{ padding: '0.45rem 0.75rem', fontSize: '0.78rem' }} title="Logout">
-            <LogOut size={14} />
+          <button onClick={handleLogout} className="ev-btn ev-btn-danger ev-btn-sm" title="Logout" style={{ gap: 6 }}>
+            <LogOut size={13} />
           </button>
         </div>
       </div>
 
-      {/* ── Registration Link (ORGANIZER ONLY) ─────────────────────────── */}
-      <GlassCard style={{ marginBottom: '1.5rem' }} padding="sm">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: '0.5rem', flexShrink: 0,
-            background: 'rgba(198,169,105,0.08)', border: '1px solid rgba(198,169,105,0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
+      {/* ── Registration Link ────────────────────────────────────── */}
+      <GlassCard padding="sm" style={{ marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: 'rgba(198,169,105,0.08)', border: '1px solid rgba(198,169,105,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <LinkIcon size={16} color="#C6A969" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem', color: '#6a6a6a', marginBottom: '0.2rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              Registration Link — Share this with participants
-            </p>
-            <p style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#C6A969',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>
+            <p className="ev-section-label" style={{ marginBottom: 2 }}>Registration Link — Share with participants</p>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#C6A969', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {registrationUrl}
             </p>
           </div>
-          <button onClick={handleCopyLink} className="btn-secondary" style={{ padding: '0.4rem 0.85rem', fontSize: '0.75rem', flexShrink: 0 }}>
-            {linkCopied ? <CheckCheck size={14} /> : <Copy size={14} />}
-            {linkCopied ? 'Copied!' : 'Copy Link'}
+          <button onClick={handleCopyLink} className="ev-btn ev-btn-secondary ev-btn-sm" style={{ flexShrink: 0, gap: 6 }}>
+            {linkCopied ? <CheckCheck size={13} /> : <Copy size={13} />}
+            {linkCopied ? 'Copied!' : 'Copy'}
           </button>
         </div>
       </GlassCard>
 
-      {/* ── Stats ──────────────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-        {statCards.map((s) => (
-          <GlassCard key={s.label} padding="md">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', color: '#6a6a6a', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>
-                {s.label}
-              </p>
-              <div style={{
-                width: 36, height: 36, borderRadius: '0.5rem',
-                background: `${s.color}15`, border: `1px solid ${s.color}25`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
+      {/* ── Stats ───────────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+        {[
+          { label: 'Total Teams',     value: stats.totalTeams,    icon: <Users size={18} />,     color: '#C6A969' },
+          { label: 'Present Teams',   value: stats.presentTeams,  icon: <UserCheck size={18} />, color: '#4ADE80' },
+          { label: 'Total Members',   value: stats.totalMembers,  icon: <Users size={18} />,     color: '#C6A969' },
+          { label: 'Present Members', value: stats.presentMembers,icon: <UserCheck size={18} />, color: '#4ADE80' },
+        ].map((s) => (
+          <div key={s.label} className="ev-card ev-card-p-md" style={{ textAlign: 'left' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <p className="ev-section-label">{s.label}</p>
+              <div style={{ width: 34, height: 34, borderRadius: 9, background: `${s.color}15`, border: `1px solid ${s.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color }}>
                 {s.icon}
               </div>
             </div>
             <p style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '2.5rem', fontWeight: 700, color: s.color, margin: 0, lineHeight: 1 }}>
               {s.value}
             </p>
-          </GlassCard>
+          </div>
         ))}
       </div>
 
-      {/* Attendance progress */}
+      {/* ── Attendance Progress ──────────────────────────────────── */}
       {stats.totalTeams > 0 && (
-        <GlassCard style={{ marginBottom: '1.5rem' }} padding="sm">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#9A9A9A' }}>
-              Attendance Progress
-            </span>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#4ADE80' }}>
-              {Math.round((stats.presentTeams / stats.totalTeams) * 100)}%
-            </span>
+        <GlassCard padding="sm" style={{ marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem', color: '#555' }}>Attendance Progress</span>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem', color: '#4ADE80', fontWeight: 700 }}>{attendancePct}%</span>
           </div>
-          <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-            <div style={{
-              height: '100%',
-              width: `${(stats.presentTeams / stats.totalTeams) * 100}%`,
-              background: 'linear-gradient(90deg, #C6A969, #4ADE80)',
-              borderRadius: 3,
-              transition: 'width 0.5s ease',
-            }} />
+          <div className="ev-progress-track">
+            <div className="ev-progress-fill" style={{ width: `${attendancePct}%` }} />
           </div>
         </GlassCard>
       )}
 
-      {/* ── Tabs ───────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '1.5rem', padding: '0.25rem', borderRadius: '0.75rem', background: 'rgba(255,255,255,0.03)', width: 'fit-content' }}>
-        <TabBtn active={tab === 'teams'} onClick={() => setTab('teams')}>
+      {/* ── Tabs ─────────────────────────────────────────────────── */}
+      <div className="ev-tabs" style={{ marginBottom: '1.5rem' }}>
+        <button className={`ev-tab${tab === 'teams' ? ' active' : ''}`} onClick={() => setTab('teams')}>
           <Users size={13} /> Teams ({teams.length})
-        </TabBtn>
-        <TabBtn active={tab === 'lookup'} onClick={() => setTab('lookup')}>
-          <Search size={13} /> Team Lookup
-        </TabBtn>
-        <TabBtn active={tab === 'email'} onClick={() => setTab('email')}>
+        </button>
+        <button className={`ev-tab${tab === 'lookup' ? ' active' : ''}`} onClick={() => setTab('lookup')}>
+          <Search size={13} /> Lookup
+        </button>
+        <button className={`ev-tab${tab === 'email' ? ' active' : ''}`} onClick={() => setTab('email')}>
           <Mail size={13} /> Broadcast
-        </TabBtn>
+        </button>
       </div>
 
-      {/* ── TEAMS TAB ──────────────────────────────────────────────────── */}
+      {/* ── TEAMS TAB ────────────────────────────────────────────── */}
       {tab === 'teams' && (
         <>
           <div style={{ marginBottom: '1rem', position: 'relative' }}>
-            <Search size={15} color="#6a6a6a" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+            <Search size={14} color="#444" style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)' }} />
             <input
-              className="input-field"
-              style={{ paddingLeft: '2.75rem' }}
+              className="ev-input"
+              style={{ paddingLeft: 38 }}
               placeholder="Search by team name, ID, or leader..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -318,62 +277,55 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {filtered.length === 0 ? (
-            <GlassCard style={{ textAlign: 'center', padding: '3rem' }}>
-              <AlertCircle size={36} color="#6a6a6a" style={{ margin: '0 auto 1rem' }} />
-              <p style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.25rem', color: '#9A9A9A' }}>
+            <GlassCard style={{ textAlign: 'center' }} padding="xl">
+              <AlertCircle size={36} color="#444" style={{ margin: '0 auto 1rem' }} />
+              <p style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.25rem', color: '#555' }}>
                 {teams.length === 0 ? 'No teams registered yet.' : 'No teams match your search.'}
               </p>
             </GlassCard>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {filtered.map((team) => (
                 <div
                   key={team.id}
-                  className="glass-card"
-                  style={{ padding: '1rem 1.25rem', cursor: 'pointer' }}
+                  className="ev-card"
+                  style={{ padding: '14px 18px', cursor: 'pointer', transition: 'all 0.2s' }}
                   onClick={() => setExpandedTeam(expandedTeam === team.id ? null : team.id)}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', color: '#6a6a6a', margin: '0 0 0.2rem' }}>{team.id}</p>
-                      <p style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.1rem', fontWeight: 700, color: '#EAEAEA', margin: 0 }}>{team.teamName}</p>
-                      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#9A9A9A', margin: '0.15rem 0 0' }}>
+                      <p className="ev-section-label" style={{ marginBottom: 3 }}>{team.id}</p>
+                      <p style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.15rem', fontWeight: 700, color: '#eaeaea', margin: 0 }}>
+                        {team.teamName}
+                      </p>
+                      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem', color: '#555', margin: '3px 0 0' }}>
                         Led by {team.leader} · {team.members.length} member{team.members.length !== 1 ? 's' : ''}
                       </p>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                       <StatusBadge status={team.attendanceMarked ? 'present' : 'absent'} />
-                      {expandedTeam === team.id ? <ChevronUp size={15} color="#6a6a6a" /> : <ChevronDown size={15} color="#6a6a6a" />}
+                      {expandedTeam === team.id ? <ChevronUp size={14} color="#444" /> : <ChevronDown size={14} color="#444" />}
                     </div>
                   </div>
 
                   {expandedTeam === team.id && (
-                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(198,169,105,0.1)' }}>
-                      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', color: '#6a6a6a', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
-                        Members
-                      </p>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                      <p className="ev-section-label" style={{ marginBottom: 8 }}>Members</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {team.members.map((m, i) => (
-                          <div key={i} style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            padding: '0.5rem 0.75rem', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.03)',
-                          }}>
-                            <div>
-                              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.82rem', color: '#EAEAEA' }}>
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.02)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8rem', color: '#ccc' }}>
                                 {i === 0 ? '👑 ' : ''}{m.name}
                               </span>
-                              {m.rollNumber && (
-                                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', color: '#6a6a6a', marginLeft: '0.75rem' }}>
-                                  {m.rollNumber}
-                                </span>
-                              )}
+                              {m.rollNumber && <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem', color: '#444' }}>{m.rollNumber}</span>}
                             </div>
                             {team.attendanceMarked && <StatusBadge status={m.present ? 'present' : 'absent'} />}
                           </div>
                         ))}
                       </div>
                       {team.email && (
-                        <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem', color: '#6a6a6a', marginTop: '0.75rem' }}>
+                        <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem', color: '#444', marginTop: 10 }}>
                           📧 {team.email}
                         </p>
                       )}
@@ -386,86 +338,60 @@ export const Dashboard: React.FC = () => {
         </>
       )}
 
-      {/* ── TEAM LOOKUP TAB ────────────────────────────────────────────── */}
+      {/* ── LOOKUP TAB ───────────────────────────────────────────── */}
       {tab === 'lookup' && (
         <div style={{ maxWidth: 560 }}>
           <GlassCard style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.5rem', fontWeight: 700, color: '#EAEAEA', marginBottom: '0.4rem' }}>
+            <h3 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.5rem', fontWeight: 700, color: '#eaeaea', marginBottom: '0.4rem' }}>
               Team Lookup
             </h3>
-            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#6a6a6a', marginBottom: '1.25rem' }}>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.76rem', color: '#555', marginBottom: '1.25rem', lineHeight: 1.6 }}>
               Look up any registered team by their Team ID to view their QR code and details.
             </p>
-
-            <form onSubmit={handleLookup} style={{ display: 'flex', gap: '0.75rem' }}>
+            <form onSubmit={handleLookup} style={{ display: 'flex', gap: 8 }}>
               <div style={{ flex: 1, position: 'relative' }}>
-                <Search size={15} color="#6a6a6a" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+                <Search size={13} color="#444" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
                 <input
-                  className="input-field"
-                  style={{ paddingLeft: '2.5rem' }}
+                  className="ev-input"
+                  style={{ paddingLeft: 36 }}
                   placeholder={`${eventId}-T01`}
                   value={lookupId}
                   onChange={(e) => { setLookupId(e.target.value); setLookupError(''); }}
                 />
               </div>
-              <button type="submit" className="btn-primary" style={{ flexShrink: 0 }}>
-                <Search size={14} /> Find
+              <button type="submit" className="ev-btn ev-btn-primary" style={{ flexShrink: 0, gap: 6 }}>
+                <Search size={13} /> Find
               </button>
             </form>
-
-            {lookupError && (
-              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#F87171', marginTop: '0.75rem' }}>
-                {lookupError}
-              </p>
-            )}
+            {lookupError && <p className="ev-field-error" style={{ marginTop: 8 }}>{lookupError}</p>}
           </GlassCard>
 
-          {/* Lookup loading */}
           {lookupLoading && (
-            <GlassCard style={{ textAlign: 'center', padding: '2rem' }}>
+            <GlassCard style={{ textAlign: 'center' }} padding="lg">
               <LoadingSpinner text="Looking up team..." />
             </GlassCard>
           )}
 
-          {/* Lookup result */}
           {!lookupLoading && lookupTeam && (
-            <GlassCard className="animate-scale-in">
-              <div style={{ marginBottom: '1.25rem', paddingBottom: '1.25rem', borderBottom: '1px solid rgba(198,169,105,0.1)' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <GlassCard className="ev-scale-in">
+              <div style={{ marginBottom: '1.25rem', paddingBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
                   <div>
-                    <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', color: '#6a6a6a', marginBottom: '0.25rem' }}>
-                      {lookupTeam.id}
-                    </p>
-                    <h3 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.5rem', fontWeight: 700, color: '#EAEAEA', margin: 0 }}>
-                      {lookupTeam.teamName}
-                    </h3>
-                    <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#9A9A9A', margin: '0.25rem 0 0' }}>
-                      Led by {lookupTeam.leader}
-                    </p>
+                    <p className="ev-section-label" style={{ marginBottom: 4 }}>{lookupTeam.id}</p>
+                    <h3 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.5rem', fontWeight: 700, color: '#eaeaea', margin: 0 }}>{lookupTeam.teamName}</h3>
+                    <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#555', margin: '4px 0 0' }}>Led by {lookupTeam.leader}</p>
                   </div>
                   <StatusBadge status={lookupTeam.attendanceMarked ? 'present' : 'absent'} />
                 </div>
               </div>
 
-              <QRCodeDisplay
-                value={`${eventId}|${lookupTeam.id}`}
-                teamId={lookupTeam.id}
-                size={180}
-              />
+              <QRCodeDisplay value={`${eventId}|${lookupTeam.id}`} teamId={lookupTeam.id} size={180} />
 
-              <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(198,169,105,0.1)' }}>
-                <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', color: '#6a6a6a', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
-                  Members
-                </p>
+              <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <p className="ev-section-label" style={{ marginBottom: 8 }}>Members</p>
                 {lookupTeam.members.map((m, i) => (
-                  <div key={i} style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '0.5rem 0.75rem', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.03)',
-                    marginBottom: '0.35rem',
-                  }}>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.82rem', color: '#EAEAEA' }}>
-                      {i === 0 ? '👑 ' : ''}{m.name}
-                    </span>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.02)', marginBottom: 4 }}>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8rem', color: '#ccc' }}>{i === 0 ? '👑 ' : ''}{m.name}</span>
                     {lookupTeam.attendanceMarked && <StatusBadge status={m.present ? 'present' : 'absent'} />}
                   </div>
                 ))}
@@ -475,31 +401,8 @@ export const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* ── EMAIL BROADCAST TAB ────────────────────────────────────────── */}
-      {tab === 'email' && (
-        <EmailPanel teams={teams} />
-      )}
+      {/* ── EMAIL BROADCAST TAB ──────────────────────────────────── */}
+      {tab === 'email' && <EmailPanel teams={teams} />}
     </div>
   );
 };
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
-const TabBtn: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({
-  active, onClick, children,
-}) => (
-  <button
-    onClick={onClick}
-    style={{
-      display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-      padding: '0.45rem 1rem', borderRadius: '0.5rem',
-      background: active ? 'rgba(198,169,105,0.12)' : 'transparent',
-      border: active ? '1px solid rgba(198,169,105,0.25)' : '1px solid transparent',
-      color: active ? '#C6A969' : '#6a6a6a',
-      fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', fontWeight: 600,
-      cursor: 'pointer', transition: 'all 0.2s ease', letterSpacing: '0.03em',
-    }}
-  >
-    {children}
-  </button>
-);
