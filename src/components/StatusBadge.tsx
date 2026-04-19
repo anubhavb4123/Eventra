@@ -7,15 +7,15 @@ interface StatusBadgeProps {
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   if (status === 'present') {
     return (
-      <span className="badge-present">
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ADE80', display: 'inline-block' }} />
+      <span className="ev-pill ev-pill-green">
+        <span className="ev-dot ev-dot-green" />
         Present
       </span>
     );
   }
   return (
-    <span className="badge-absent">
-      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F87171', display: 'inline-block' }} />
+    <span className="ev-pill ev-pill-red">
+      <span className="ev-dot ev-dot-red" />
       Absent
     </span>
   );

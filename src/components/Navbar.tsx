@@ -18,96 +18,66 @@ export const Navbar: React.FC = () => {
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/organizer-login');
-  };
+  const handleLogout = () => { logout(); navigate('/organizer-login'); };
 
-  // Public nav links — no Team Lookup, no registration link
   const publicLinks = [
     { to: '/', label: 'Home' },
     { to: '/create-event', label: 'Create Event' },
   ];
 
-  const linkStyle = (active: boolean): React.CSSProperties => ({
-    textDecoration: 'none',
-    fontFamily: "'JetBrains Mono', monospace",
-    fontSize: '0.78rem',
-    fontWeight: 600,
-    letterSpacing: '0.04em',
-    padding: '0.4rem 0.9rem',
-    borderRadius: '0.5rem',
-    color: active ? '#C6A969' : '#9A9A9A',
-    background: active ? 'rgba(198,169,105,0.1)' : 'transparent',
-    transition: 'all 0.2s ease',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.4rem',
-  });
+  const isActive = (to: string) =>
+    to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);
 
   return (
-    <nav
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 50,
-        transition: 'all 0.3s ease',
-        background: scrolled ? 'rgba(26,26,26,0.95)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(20px)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(198,169,105,0.15)' : '1px solid transparent',
-      }}
-    >
+    <nav style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+      transition: 'all 0.3s ease',
+      background: scrolled ? 'rgba(10,10,15,0.92)' : 'transparent',
+      backdropFilter: scrolled ? 'blur(20px)' : 'none',
+      WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
+      borderBottom: scrolled ? '1px solid rgba(198,169,105,0.12)' : '1px solid transparent',
+    }}>
       <div style={{
-        maxWidth: 1200, margin: '0 auto', padding: '0 1.5rem',
+        maxWidth: 1200, margin: '0 auto', padding: '0 24px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64,
       }}>
         {/* Logo */}
-        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
-            width: 32, height: 32, borderRadius: '0.5rem',
+            width: 34, height: 34, borderRadius: 10,
             background: 'linear-gradient(135deg, #C6A969, #D4AF37)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 15px rgba(198,169,105,0.4)',
+            boxShadow: '0 0 18px rgba(198,169,105,0.35)',
+            flexShrink: 0,
           }}>
-            <Zap size={18} color="#1A1A1A" strokeWidth={2.5} />
+            <Zap size={18} color="#0a0a0f" strokeWidth={2.5} />
           </div>
           <span style={{
             fontFamily: "'Crimson Pro', Georgia, serif",
-            fontSize: '1.4rem',
-            fontWeight: 700,
-            letterSpacing: '-0.02em',
+            fontSize: '1.4rem', fontWeight: 700, letterSpacing: '-0.02em',
             background: 'linear-gradient(135deg, #C6A969, #D4AF37)',
-            WebkitBackgroundClip: 'text',
+            WebkitBackgroundClip: 'text', backgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
           }}>
             Eventra
           </span>
         </Link>
 
-        {/* Desktop: Public links + Auth controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }} className="hidden md:flex">
+        {/* Desktop nav */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} className="hidden md:flex">
           {publicLinks.map((link) => {
-            const active = location.pathname === link.to;
+            const active = isActive(link.to);
             return (
-              <Link
-                key={link.to}
-                to={link.to}
-                style={linkStyle(active)}
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.color = '#EAEAEA';
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.color = '#9A9A9A';
-                    e.currentTarget.style.background = 'transparent';
-                  }
-                }}
+              <Link key={link.to} to={link.to} style={{
+                textDecoration: 'none', fontFamily: "'JetBrains Mono', monospace",
+                fontSize: '0.76rem', fontWeight: 600, letterSpacing: '0.04em',
+                padding: '6px 14px', borderRadius: 8, transition: 'all 0.2s',
+                color: active ? '#C6A969' : '#666',
+                background: active ? 'rgba(198,169,105,0.1)' : 'transparent',
+                border: active ? '1px solid rgba(198,169,105,0.2)' : '1px solid transparent',
+              }}
+                onMouseEnter={e => { if (!active) { e.currentTarget.style.color = '#eaeaea'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; } }}
+                onMouseLeave={e => { if (!active) { e.currentTarget.style.color = '#666'; e.currentTarget.style.background = 'transparent'; } }}
               >
                 {link.label}
               </Link>
@@ -115,41 +85,30 @@ export const Navbar: React.FC = () => {
           })}
 
           {/* Separator */}
-          <div style={{ width: 1, height: 18, background: 'rgba(198,169,105,0.2)', margin: '0 0.25rem' }} />
+          <div style={{ width: 1, height: 16, background: 'rgba(198,169,105,0.15)', margin: '0 4px' }} />
 
           {isAuthenticated && eventId ? (
-            /* Logged-in controls */
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <Link
                 to={`/dashboard/${eventId}`}
-                style={linkStyle(location.pathname.startsWith('/dashboard'))}
-                onMouseEnter={(e) => {
-                  if (!location.pathname.startsWith('/dashboard')) {
-                    e.currentTarget.style.color = '#EAEAEA';
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!location.pathname.startsWith('/dashboard')) {
-                    e.currentTarget.style.color = '#9A9A9A';
-                    e.currentTarget.style.background = 'transparent';
-                  }
+                style={{
+                  textDecoration: 'none', fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: '0.76rem', fontWeight: 600, letterSpacing: '0.04em',
+                  padding: '6px 14px', borderRadius: 8, transition: 'all 0.2s',
+                  color: location.pathname.startsWith('/dashboard') ? '#C6A969' : '#666',
+                  background: location.pathname.startsWith('/dashboard') ? 'rgba(198,169,105,0.1)' : 'transparent',
+                  border: location.pathname.startsWith('/dashboard') ? '1px solid rgba(198,169,105,0.2)' : '1px solid transparent',
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
                 }}
               >
-                <LayoutDashboard size={13} />
-                Dashboard
+                <LayoutDashboard size={13} /> Dashboard
               </Link>
 
-              {/* Event ID pill */}
               <div style={{
-                padding: '0.25rem 0.65rem',
-                borderRadius: '9999px',
-                background: 'rgba(198,169,105,0.08)',
-                border: '1px solid rgba(198,169,105,0.2)',
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '0.7rem',
-                color: '#C6A969',
-                letterSpacing: '0.04em',
+                padding: '3px 12px', borderRadius: 9999,
+                background: 'rgba(198,169,105,0.08)', border: '1px solid rgba(198,169,105,0.18)',
+                fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem', color: '#C6A969',
+                letterSpacing: '0.05em',
               }}>
                 {eventId}
               </div>
@@ -158,39 +117,29 @@ export const Navbar: React.FC = () => {
                 onClick={handleLogout}
                 title="Logout"
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#6a6a6a',
-                  padding: '0.4rem',
-                  borderRadius: '0.4rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  transition: 'color 0.2s ease',
+                  background: 'none', border: 'none', cursor: 'pointer', 
+                  color: '#444', padding: '6px', borderRadius: 8,
+                  display: 'flex', alignItems: 'center', transition: 'color 0.2s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#F87171')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#6a6a6a')}
+                onMouseEnter={e => (e.currentTarget.style.color = '#F87171')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#444')}
               >
                 <LogOut size={15} />
               </button>
             </div>
           ) : (
-            /* Logged-out: show login link */
             <Link
               to="/organizer-login"
-              style={linkStyle(location.pathname === '/organizer-login')}
-              onMouseEnter={(e) => {
-                if (location.pathname !== '/organizer-login') {
-                  e.currentTarget.style.color = '#EAEAEA';
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                }
+              style={{
+                textDecoration: 'none', fontFamily: "'JetBrains Mono', monospace",
+                fontSize: '0.76rem', fontWeight: 600, letterSpacing: '0.04em',
+                padding: '6px 14px', borderRadius: 8, transition: 'all 0.2s',
+                color: location.pathname === '/organizer-login' ? '#C6A969' : '#666',
+                background: location.pathname === '/organizer-login' ? 'rgba(198,169,105,0.1)' : 'transparent',
+                border: location.pathname === '/organizer-login' ? '1px solid rgba(198,169,105,0.2)' : '1px solid transparent',
               }}
-              onMouseLeave={(e) => {
-                if (location.pathname !== '/organizer-login') {
-                  e.currentTarget.style.color = '#9A9A9A';
-                  e.currentTarget.style.background = 'transparent';
-                }
-              }}
+              onMouseEnter={e => { if (location.pathname !== '/organizer-login') { e.currentTarget.style.color = '#eaeaea'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; } }}
+              onMouseLeave={e => { if (location.pathname !== '/organizer-login') { e.currentTarget.style.color = '#666'; e.currentTarget.style.background = 'transparent'; } }}
             >
               Organizer Login
             </Link>
@@ -201,108 +150,72 @@ export const Navbar: React.FC = () => {
         <button
           className="md:hidden"
           onClick={() => setMenuOpen(!menuOpen)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9A9A9A', display: 'flex', padding: '0.25rem' }}
+          style={{
+            background: 'none', border: '1px solid rgba(255,255,255,0.08)',
+            cursor: 'pointer', color: '#888',
+            padding: '6px', borderRadius: 8, display: 'flex',
+            transition: 'all 0.2s',
+          }}
         >
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div
-          style={{
-            background: 'rgba(26,26,26,0.98)',
-            backdropFilter: 'blur(20px)',
-            borderTop: '1px solid rgba(198,169,105,0.15)',
-            padding: '1rem 1.5rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem',
-          }}
-          className="md:hidden"
-        >
+        <div style={{
+          background: 'rgba(10,10,15,0.97)',
+          backdropFilter: 'blur(20px)',
+          borderTop: '1px solid rgba(198,169,105,0.12)',
+          padding: '16px 24px 24px',
+          display: 'flex', flexDirection: 'column', gap: 6,
+        }} className="md:hidden">
           {publicLinks.map((link) => {
-            const active = location.pathname === link.to;
+            const active = isActive(link.to);
             return (
-              <Link
-                key={link.to}
-                to={link.to}
-                style={{
-                  textDecoration: 'none',
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  letterSpacing: '0.04em',
-                  padding: '0.65rem 1rem',
-                  borderRadius: '0.5rem',
-                  color: active ? '#C6A969' : '#EAEAEA',
-                  background: active ? 'rgba(198,169,105,0.1)' : 'transparent',
-                }}
-              >
+              <Link key={link.to} to={link.to} style={{
+                textDecoration: 'none', fontFamily: "'JetBrains Mono', monospace",
+                fontSize: '0.82rem', fontWeight: 600, padding: '10px 14px',
+                borderRadius: 10, letterSpacing: '0.04em',
+                color: active ? '#C6A969' : '#eaeaea',
+                background: active ? 'rgba(198,169,105,0.1)' : 'rgba(255,255,255,0.02)',
+                border: active ? '1px solid rgba(198,169,105,0.2)' : '1px solid rgba(255,255,255,0.06)',
+              }}>
                 {link.label}
               </Link>
             );
           })}
 
-          <div style={{ height: 1, background: 'rgba(198,169,105,0.1)', margin: '0.25rem 0' }} />
+          <div style={{ height: 1, background: 'rgba(198,169,105,0.1)', margin: '4px 0' }} />
 
           {isAuthenticated && eventId ? (
             <>
-              <Link
-                to={`/dashboard/${eventId}`}
-                style={{
-                  textDecoration: 'none',
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  padding: '0.65rem 1rem',
-                  borderRadius: '0.5rem',
-                  color: '#C6A969',
-                  background: 'rgba(198,169,105,0.08)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                }}
-              >
-                <LayoutDashboard size={14} />
-                Dashboard ({eventId})
+              <Link to={`/dashboard/${eventId}`} style={{
+                textDecoration: 'none', fontFamily: "'JetBrains Mono', monospace",
+                fontSize: '0.82rem', fontWeight: 600, padding: '10px 14px',
+                borderRadius: 10, letterSpacing: '0.04em', color: '#C6A969',
+                background: 'rgba(198,169,105,0.08)', border: '1px solid rgba(198,169,105,0.18)',
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <LayoutDashboard size={15} /> Dashboard ({eventId})
               </Link>
-              <button
-                onClick={handleLogout}
-                style={{
-                  background: 'rgba(248,113,113,0.08)',
-                  border: '1px solid rgba(248,113,113,0.2)',
-                  cursor: 'pointer',
-                  color: '#F87171',
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  padding: '0.65rem 1rem',
-                  borderRadius: '0.5rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  textAlign: 'left',
-                }}
-              >
-                <LogOut size={14} />
-                Logout
+              <button onClick={handleLogout} style={{
+                background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)',
+                cursor: 'pointer', color: '#F87171',
+                fontFamily: "'JetBrains Mono', monospace", fontSize: '0.82rem',
+                fontWeight: 600, padding: '10px 14px', borderRadius: 10,
+                display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left',
+              }}>
+                <LogOut size={15} /> Logout
               </button>
             </>
           ) : (
-            <Link
-              to="/organizer-login"
-              style={{
-                textDecoration: 'none',
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                padding: '0.65rem 1rem',
-                borderRadius: '0.5rem',
-                color: '#EAEAEA',
-                background: 'transparent',
-              }}
-            >
+            <Link to="/organizer-login" style={{
+              textDecoration: 'none', fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '0.82rem', fontWeight: 600, padding: '10px 14px',
+              borderRadius: 10, color: '#eaeaea',
+              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+            }}>
               Organizer Login
             </Link>
           )}
