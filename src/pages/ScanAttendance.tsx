@@ -11,6 +11,7 @@ import { Button } from '@/components/Button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { StatusBadge } from '@/components/StatusBadge';
 import { AlertCircle, ScanLine, RefreshCw, Users, CheckSquare } from 'lucide-react';
+import '@/styles/eventra-shared.css';
 
 type ScanState = 'scanning' | 'loading' | 'found' | 'duplicate' | 'error' | 'success';
 
@@ -26,41 +27,18 @@ export const ScanAttendance: React.FC = () => {
   const handleScanSuccess = async (decoded: string) => {
     if (scanState !== 'scanning') return;
     setScanState('loading');
-
     try {
       const parts = decoded.split('|');
-      if (parts.length !== 2) {
-        setErrorMsg('Invalid QR code format. Expected eventId|teamId.');
-        setScanState('error');
-        return;
-      }
-
+      if (parts.length !== 2) { setErrorMsg('Invalid QR code format. Expected eventId|teamId.'); setScanState('error'); return; }
       const [scannedEventId, scannedTeamId] = parts;
       const teamCode = scannedTeamId.split('-').pop() || scannedTeamId;
-
-      if (scannedEventId !== eventId) {
-        setErrorMsg(`QR belongs to a different event: "${scannedEventId}". Expected: "${eventId}".`);
-        setScanState('error');
-        return;
-      }
-
+      if (scannedEventId !== eventId) { setErrorMsg(`QR belongs to a different event: "${scannedEventId}".`); setScanState('error'); return; }
       const teamSnap = await withRetry(() => get(ref(db, `events/${scannedEventId}/teams/${teamCode}`)));
-      if (!teamSnap.exists()) {
-        setErrorMsg(`Team "${scannedTeamId}" not found in database.`);
-        setScanState('error');
-        return;
-      }
-
+      if (!teamSnap.exists()) { setErrorMsg(`Team "${scannedTeamId}" not found in database.`); setScanState('error'); return; }
       const teamData = { id: scannedTeamId, ...teamSnap.val() } as TeamWithId;
-
-      if (teamData.attendanceMarked) {
-        setTeam(teamData);
-        setScanState('duplicate');
-        return;
-      }
-
+      if (teamData.attendanceMarked) { setTeam(teamData); setScanState('duplicate'); return; }
       setTeam(teamData);
-      setMemberPresence(teamData.members.map(() => true)); // default all present
+      setMemberPresence(teamData.members.map(() => true));
       setScanState('found');
     } catch (err) {
       console.error('Scan Error:', err);
@@ -73,17 +51,9 @@ export const ScanAttendance: React.FC = () => {
     if (!team || !eventId) return;
     setSaving(true);
     try {
-      const updatedMembers = team.members.map((m, i) => ({
-        ...m,
-        present: memberPresence[i],
-      }));
-
+      const updatedMembers = team.members.map((m, i) => ({ ...m, present: memberPresence[i] }));
       const teamCode = team.id.split('-').pop() || team.id;
-      await withRetry(() => update(ref(db, `events/${eventId}/teams/${teamCode}`), {
-        attendanceMarked: true,
-        members: updatedMembers,
-      }));
-
+      await withRetry(() => update(ref(db, `events/${eventId}/teams/${teamCode}`), { attendanceMarked: true, members: updatedMembers }));
       setScanState('success');
     } catch (err) {
       console.error('Attendance Save Error:', err);
@@ -94,149 +64,93 @@ export const ScanAttendance: React.FC = () => {
     }
   };
 
-  const resetScan = () => {
-    setTeam(null);
-    setMemberPresence([]);
-    setErrorMsg('');
-    setScanState('scanning');
-  };
-
-  const toggleMember = (i: number) => {
-    setMemberPresence((prev) => prev.map((v, idx) => idx === i ? !v : v));
-  };
+  const resetScan = () => { setTeam(null); setMemberPresence([]); setErrorMsg(''); setScanState('scanning'); };
+  const toggleMember = (i: number) => setMemberPresence(p => p.map((v, idx) => idx === i ? !v : v));
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', padding: '3rem 1.5rem' }}>
+    <div style={{ maxWidth: 620, margin: '0 auto', padding: '3rem 1.5rem' }}>
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
         <div style={{
-          width: 64, height: 64, borderRadius: '1rem', margin: '0 auto 1.25rem',
-          background: 'rgba(198,169,105,0.08)',
-          border: '1px solid rgba(198,169,105,0.25)',
+          width: 64, height: 64, borderRadius: 16, margin: '0 auto 1.5rem',
+          background: 'rgba(198,169,105,0.08)', border: '1px solid rgba(198,169,105,0.2)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 25px rgba(198,169,105,0.1)',
+          boxShadow: '0 0 30px rgba(198,169,105,0.1)',
         }}>
-          <ScanLine size={28} color="#C6A969" />
+          <ScanLine size={26} color="#C6A969" />
         </div>
-        <h1 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '2.5rem', fontWeight: 700, color: '#EAEAEA', marginBottom: '0.5rem' }}>
+        <div className="ev-section-label" style={{ marginBottom: 10 }}>ORGANIZER TOOL</div>
+        <h1 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: 'clamp(2rem,5vw,2.8rem)', fontWeight: 700, color: '#eaeaea', marginBottom: '0.5rem', lineHeight: 1.1 }}>
           Scan Attendance
         </h1>
-        <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.82rem', color: '#9A9A9A' }}>
+        <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.76rem', color: '#555' }}>
           Event: <span style={{ color: '#C6A969' }}>{eventId}</span>
         </p>
       </div>
 
-      {/* SCANNING STATE */}
+      {/* SCANNING */}
       {scanState === 'scanning' && (
         <GlassCard>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#9A9A9A', textAlign: 'center', marginBottom: '1.25rem' }}>
-              Point the camera at a team's QR code to begin.
-            </p>
-            <QRScanner onScanSuccess={handleScanSuccess} qrboxSize={250} />
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#555', textAlign: 'center', marginBottom: '1.25rem' }}>
+            Point the camera at a team QR code to begin.
+          </p>
+          <QRScanner onScanSuccess={handleScanSuccess} qrboxSize={250} />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '1.5rem 0' }}>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.04)' }} />
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem', color: '#444', letterSpacing: '0.1em' }}>OR</span>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.04)' }} />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0' }}>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#6a6a6a', letterSpacing: '0.1em' }}>OR</span>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
-          </div>
-
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (manualId.trim()) handleScanSuccess(`${eventId}|${manualId.trim()}`);
-            }}
-            style={{ display: 'flex', gap: '0.5rem' }}
-          >
-            <input 
-              type="text"
-              placeholder={`e.g. ${eventId}-T01`}
-              className="input-field"
-              value={manualId}
-              onChange={(e) => {
-                setManualId(e.target.value);
-                setErrorMsg('');
-              }}
-              style={{ flex: 1 }}
-            />
-            <Button type="submit" variant="secondary" style={{ flexShrink: 0 }}>
-              Lookup
-            </Button>
+          <form onSubmit={(e) => { e.preventDefault(); if (manualId.trim()) handleScanSuccess(`${eventId}|${manualId.trim()}`); }}
+            style={{ display: 'flex', gap: 8 }}>
+            <input type="text" placeholder={`e.g. ${eventId}-T01`} className="ev-input"
+              value={manualId} onChange={(e) => { setManualId(e.target.value); setErrorMsg(''); }}
+              style={{ flex: 1 }} />
+            <Button type="submit" variant="secondary" style={{ flexShrink: 0 }}>Lookup</Button>
           </form>
         </GlassCard>
       )}
 
-      {/* LOADING STATE */}
+      {/* LOADING */}
       {scanState === 'loading' && (
-        <GlassCard style={{ textAlign: 'center', padding: '3rem' }}>
+        <GlassCard style={{ textAlign: 'center' }} padding="xl">
           <LoadingSpinner text="Fetching team data..." />
         </GlassCard>
       )}
 
-      {/* FOUND STATE */}
+      {/* FOUND */}
       {scanState === 'found' && team && (
-        <GlassCard className="animate-scale-in">
-          {/* Team info */}
-          <div style={{ marginBottom: '1.5rem', paddingBottom: '1.25rem', borderBottom: '1px solid rgba(198,169,105,0.1)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <GlassCard className="ev-scale-in">
+          <div style={{ marginBottom: '1.25rem', paddingBottom: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
               <div>
-                <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', color: '#6a6a6a', marginBottom: '0.25rem' }}>
-                  {team.id}
-                </p>
-                <h2 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.75rem', fontWeight: 700, color: '#EAEAEA', margin: 0 }}>
-                  {team.teamName}
-                </h2>
-                <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#9A9A9A', margin: '0.25rem 0 0' }}>
-                  Led by {team.leader}
-                </p>
+                <p className="ev-section-label" style={{ marginBottom: 4 }}>{team.id}</p>
+                <h2 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.75rem', fontWeight: 700, color: '#eaeaea', margin: 0 }}>{team.teamName}</h2>
+                <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#666', margin: '4px 0 0' }}>Led by {team.leader}</p>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Users size={14} color="#9A9A9A" />
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#9A9A9A' }}>
-                  {team.members.length} members
-                </span>
-              </div>
+              <span className="ev-pill ev-pill-ghost"><Users size={11} /> {team.members.length} members</span>
             </div>
           </div>
 
-          {/* Member checkboxes */}
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem', color: '#6a6a6a', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1rem' }}>
-            Mark attendance per member
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem' }}>
+          <p className="ev-section-label" style={{ marginBottom: 10 }}>Mark attendance per member</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: '1.5rem' }}>
             {team.members.map((m, i) => (
-              <div
-                key={i}
-                onClick={() => toggleMember(i)}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '0.75rem 1rem', borderRadius: '0.75rem', cursor: 'pointer',
-                  background: memberPresence[i] ? 'rgba(74,222,128,0.07)' : 'rgba(255,255,255,0.03)',
-                  border: memberPresence[i] ? '1px solid rgba(74,222,128,0.25)' : '1px solid rgba(255,255,255,0.06)',
-                  transition: 'all 0.2s ease',
-                }}
-              >
+              <div key={i} className={`ev-member-toggle${memberPresence[i] ? ' present' : ''}`} onClick={() => toggleMember(i)}>
                 <div>
-                  <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.85rem', color: '#EAEAEA', margin: 0 }}>
+                  <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.82rem', color: '#eaeaea', margin: 0 }}>
                     {i === 0 ? '👑 ' : ''}{m.name}
                   </p>
                   {(m.rollNumber || m.college || m.branch) && (
-                    <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.7rem', color: '#6a6a6a', margin: '0.15rem 0 0' }}>
+                    <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem', color: '#555', margin: '2px 0 0' }}>
                       {[m.rollNumber, m.college, m.branch].filter(Boolean).join(' · ')}
                     </p>
                   )}
                 </div>
-                <div style={{
-                  width: 22, height: 22, borderRadius: '0.35rem', flexShrink: 0,
-                  background: memberPresence[i] ? '#4ADE80' : 'transparent',
-                  border: memberPresence[i] ? '2px solid #4ADE80' : '2px solid rgba(255,255,255,0.2)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.2s ease',
-                }}>
+                <div className={`ev-member-check${memberPresence[i] ? ' checked' : ''}`}>
                   {memberPresence[i] && (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 6L5 9L10 3" stroke="#1A1A1A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 6L5 9L10 3" stroke="#0a0a0f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   )}
                 </div>
@@ -244,89 +158,70 @@ export const ScanAttendance: React.FC = () => {
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <Button
-              variant="secondary"
-              onClick={resetScan}
-              style={{ flex: '0 0 auto' }}
-            >
-              <RefreshCw size={14} /> Rescan
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button variant="ghost" onClick={resetScan} style={{ flexShrink: 0 }}>
+              <RefreshCw size={13} /> Rescan
             </Button>
-            <Button
-              onClick={handleMarkAttendance}
-              loading={saving}
-              fullWidth
-              icon={<CheckSquare size={15} />}
-            >
-              Confirm & Mark ({memberPresence.filter(Boolean).length}/{team.members.length} present)
+            <Button onClick={handleMarkAttendance} loading={saving} fullWidth icon={<CheckSquare size={14} />}>
+              Confirm ({memberPresence.filter(Boolean).length}/{team.members.length} present)
             </Button>
           </div>
         </GlassCard>
       )}
 
-      {/* DUPLICATE STATE */}
+      {/* DUPLICATE */}
       {scanState === 'duplicate' && team && (
-        <GlassCard style={{ textAlign: 'center', padding: '2.5rem' }} className="animate-scale-in">
+        <GlassCard className="ev-scale-in" style={{ textAlign: 'center' }} padding="xl">
           <div style={{
             width: 64, height: 64, borderRadius: '50%', margin: '0 auto 1.25rem',
-            background: 'rgba(251,191,36,0.1)', border: '2px solid rgba(251,191,36,0.4)',
+            background: 'rgba(251,191,36,0.08)', border: '2px solid rgba(251,191,36,0.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <AlertCircle size={32} color="#FBBF24" />
+            <AlertCircle size={30} color="#FBBF24" />
           </div>
-          <h3 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.75rem', color: '#EAEAEA', marginBottom: '0.5rem' }}>
-            Already Checked In
-          </h3>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.82rem', color: '#9A9A9A', marginBottom: '1.5rem' }}>
-            <span style={{ color: '#C6A969', fontWeight: 700 }}>{team.teamName}</span> attendance was already marked.
+          <h3 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.75rem', color: '#eaeaea', marginBottom: '0.5rem' }}>Already Checked In</h3>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#666', marginBottom: '1.5rem' }}>
+            <span style={{ color: '#C6A969', fontWeight: 700 }}>{team.teamName}</span> was already marked.
           </p>
-          <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: 6 }}>
             {team.members.map((m, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0' }}>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.82rem', color: '#EAEAEA' }}>{m.name}</span>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8rem', color: '#ccc' }}>{m.name}</span>
                 <StatusBadge status={m.present ? 'present' : 'absent'} />
               </div>
             ))}
           </div>
-          <button onClick={resetScan} className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
-            <ScanLine size={14} /> Scan Another
-          </button>
+          <Button variant="ghost" fullWidth onClick={resetScan} icon={<ScanLine size={14} />}>
+            Scan Another
+          </Button>
         </GlassCard>
       )}
 
-      {/* ERROR STATE */}
+      {/* ERROR */}
       {scanState === 'error' && (
-        <GlassCard style={{ textAlign: 'center', padding: '2.5rem' }} className="animate-scale-in">
+        <GlassCard className="ev-scale-in" style={{ textAlign: 'center' }} padding="xl">
           <div style={{
             width: 64, height: 64, borderRadius: '50%', margin: '0 auto 1.25rem',
-            background: 'rgba(248,113,113,0.1)', border: '2px solid rgba(248,113,113,0.4)',
+            background: 'rgba(248,113,113,0.08)', border: '2px solid rgba(248,113,113,0.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <AlertCircle size={32} color="#F87171" />
+            <AlertCircle size={30} color="#F87171" />
           </div>
-          <h3 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.75rem', color: '#EAEAEA', marginBottom: '0.5rem' }}>
-            Scan Error
-          </h3>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8rem', color: '#9A9A9A', marginBottom: '1.5rem' }}>
-            {errorMsg}
-          </p>
-          <button onClick={resetScan} className="btn-primary" style={{ margin: '0 auto', display: 'flex' }}>
-            <ScanLine size={14} /> Try Again
-          </button>
+          <h3 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.75rem', color: '#eaeaea', marginBottom: '0.5rem' }}>Scan Error</h3>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#666', marginBottom: '1.5rem', lineHeight: 1.6 }}>{errorMsg}</p>
+          <Button fullWidth onClick={resetScan} icon={<ScanLine size={14} />}>Try Again</Button>
         </GlassCard>
       )}
 
-      {/* SUCCESS STATE */}
+      {/* SUCCESS */}
       {scanState === 'success' && (
-        <GlassCard style={{ textAlign: 'center', padding: '3rem' }} className="animate-scale-in">
+        <GlassCard className="ev-scale-in" style={{ textAlign: 'center' }} padding="xl">
           <SuccessAnimation
             message="Attendance Marked!"
             subtitle={`${team?.teamName} — ${memberPresence.filter(Boolean).length} members marked present`}
           />
           <div style={{ marginTop: '2rem' }}>
-            <button onClick={resetScan} className="btn-primary" style={{ margin: '0 auto', display: 'flex' }}>
-              <ScanLine size={14} /> Scan Next Team
-            </button>
+            <Button fullWidth onClick={resetScan} icon={<ScanLine size={14} />}>Scan Next Team</Button>
           </div>
         </GlassCard>
       )}
