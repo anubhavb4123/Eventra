@@ -17,38 +17,25 @@ export const Input: React.FC<InputProps> = ({
   ...props
 }) => {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="ev-field-wrap">
       {label && (
-        <label
-          htmlFor={id}
-          className="text-xs font-semibold tracking-widest uppercase text-[#9A9A9A]"
-          style={{ fontFamily: "'JetBrains Mono', monospace" }}
-        >
+        <label htmlFor={id} className="ev-label">
           {label}
         </label>
       )}
-      <div className="relative">
+      <div className={icon ? 'ev-input-icon-wrap' : ''} style={{ position: icon ? 'relative' : undefined }}>
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9A9A9A]">
-            {icon}
-          </div>
+          <span className="ev-input-icon">{icon}</span>
         )}
         <input
           id={id}
-          className={`input-field ${icon ? 'pl-10' : ''} ${error ? 'border-[#F87171] focus:border-[#F87171]' : ''} ${className}`}
+          className={['ev-input', error ? 'ev-input-error' : '', className].filter(Boolean).join(' ')}
+          style={icon ? { paddingLeft: 38 } : undefined}
           {...props}
         />
       </div>
-      {error && (
-        <p className="text-[11px] text-[#F87171]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-          {error}
-        </p>
-      )}
-      {helper && !error && (
-        <p className="text-[11px] text-[#6a6a6a]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-          {helper}
-        </p>
-      )}
+      {error && <p className="ev-field-error">{error}</p>}
+      {helper && !error && <p className="ev-field-hint">{helper}</p>}
     </div>
   );
 };

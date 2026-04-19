@@ -5,43 +5,29 @@ interface LoadingSpinnerProps {
   text?: string;
 }
 
-export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  size = 'md',
-  text,
-}) => {
-  const sizeMap = { sm: 24, md: 40, lg: 60 };
-  const px = sizeMap[size];
+export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 'md', text }) => {
+  const px = size === 'sm' ? 24 : size === 'lg' ? 56 : 40;
+  const sw = size === 'sm' ? 2.5 : 3;
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4">
-      <svg
-        width={px}
-        height={px}
-        viewBox="0 0 40 40"
-        fill="none"
-        className="animate-spin"
-      >
-        <circle
-          cx="20"
-          cy="20"
-          r="17"
-          stroke="rgba(198,169,105,0.2)"
-          strokeWidth="3"
-        />
+    <div className="ev-spinner-wrap">
+      <svg width={px} height={px} viewBox="0 0 40 40" fill="none" className="ev-spinner">
+        <circle cx="20" cy="20" r="16" stroke="rgba(198,169,105,0.15)" strokeWidth={sw} />
         <path
-          d="M20 3 A17 17 0 0 1 37 20"
-          stroke="#C6A969"
-          strokeWidth="3"
+          d="M20 4 A16 16 0 0 1 36 20"
+          stroke="url(#spinner-grad)"
+          strokeWidth={sw}
           strokeLinecap="round"
         />
+        <defs>
+          <linearGradient id="spinner-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#C6A969" />
+            <stop offset="100%" stopColor="#D4AF37" />
+          </linearGradient>
+        </defs>
       </svg>
       {text && (
-        <p
-          className="text-xs text-[#9A9A9A] tracking-wide"
-          style={{ fontFamily: "'JetBrains Mono', monospace" }}
-        >
-          {text}
-        </p>
+        <p className="ev-spinner-text">{text}</p>
       )}
     </div>
   );

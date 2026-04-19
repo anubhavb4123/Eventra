@@ -6,7 +6,8 @@ interface GlassCardProps {
   style?: React.CSSProperties;
   hover?: boolean;
   glow?: boolean;
-  padding?: 'sm' | 'md' | 'lg' | 'none';
+  accent?: boolean;
+  padding?: 'sm' | 'md' | 'lg' | 'xl' | 'none';
 }
 
 export const GlassCard: React.FC<GlassCardProps> = ({
@@ -15,19 +16,24 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   style,
   hover = true,
   glow = false,
+  accent = false,
   padding = 'md',
 }) => {
-  const paddingClasses = {
-    none: '',
-    sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-8',
-  };
+  const paddingMap = { none: '', sm: 'ev-card-p-sm', md: 'ev-card-p-md', lg: 'ev-card-p-lg', xl: 'ev-card-p-xl' };
 
   return (
     <div
-      className={`glass-card ${paddingClasses[padding]} ${hover ? '' : 'hover:border-[rgba(198,169,105,0.15)] hover:shadow-none'} ${glow ? 'animate-pulse-glow' : ''} ${className}`}
-      style={style}
+      className={[
+        'ev-card',
+        paddingMap[padding],
+        accent ? 'ev-card-accent' : '',
+        glow ? 'ev-pulse-dot' : '',
+        className,
+      ].filter(Boolean).join(' ')}
+      style={{
+        cursor: hover ? undefined : 'default',
+        ...style,
+      }}
     >
       {children}
     </div>
