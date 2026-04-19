@@ -9,6 +9,7 @@ import { GlassCard } from '@/components/GlassCard';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
 import { Key, Hash, Lock, Zap, CheckCircle, WifiOff, AlertCircle } from 'lucide-react';
+import '@/styles/eventra-shared.css';
 
 export const CreateEvent: React.FC = () => {
   const navigate = useNavigate();
@@ -19,18 +20,12 @@ export const CreateEvent: React.FC = () => {
   const [createdEventId, setCreatedEventId] = useState('');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  // Monitor connectivity for UI hints
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
   }, []);
 
   const validate = (): boolean => {
@@ -47,215 +42,168 @@ export const CreateEvent: React.FC = () => {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-
     try {
       const eventIdClean = form.eventId.trim().toLowerCase();
       const eventRef = ref(db, `events/${eventIdClean}`);
-
-      // Check uniqueness using RTDB 'get' with retry
       const existing = await withRetry(() => get(eventRef));
-
       if (existing.exists()) {
         setErrors((prev) => ({ ...prev, eventId: 'This Event ID is already taken. Choose another.' }));
         setLoading(false);
         return;
       }
-
       const passwordHash = await hashPassword(form.password);
-
-      // Create event using RTDB 'set' with retry
-      await withRetry(() => set(eventRef, {
-        passwordHash,
-        createdAt: serverTimestamp(),
-        teamCount: 0,
-      }));
-
+      await withRetry(() => set(eventRef, { passwordHash, createdAt: serverTimestamp(), teamCount: 0 }));
       setCreatedEventId(eventIdClean);
       setStep('success');
     } catch (err: any) {
-      console.error('Create Event Error:', err);
       const isNetworkError = !navigator.onLine || err.message?.includes('offline') || err.code === 'PERMISSION_DENIED';
-
-      setErrors({
-        submit: isNetworkError
-          ? 'Network error: Please check your internet connection or database configuration.'
-          : 'Failed to create event. Details: ' + (err.message || 'Unknown error'),
-      });
+      setErrors({ submit: isNetworkError ? 'Network error: check your connection or database config.' : 'Failed to create event. ' + (err.message || 'Unknown error') });
     } finally {
       setLoading(false);
     }
   };
 
+  /* ── Success state ─────────────────────────────────────────── */
   if (step === 'success') {
     return (
       <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.5rem' }}>
-        <GlassCard style={{ maxWidth: 480, width: '100%' }} className="animate-scale-in">
-          <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+        <div className="ev-scale-in" style={{ maxWidth: 460, width: '100%', textAlign: 'center' }}>
+          {/* Animated ring */}
+          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem' }}>
+            <div style={{ position: 'absolute', width: 110, height: 110, borderRadius: '50%', border: '1px solid rgba(74,222,128,0.2)', animation: 'ev-ring-expand 2s ease-out infinite' }} />
+            <div style={{ position: 'absolute', width: 85, height: 85, borderRadius: '50%', border: '1px solid rgba(74,222,128,0.12)', animation: 'ev-ring-expand 2s 0.6s ease-out infinite' }} />
             <div style={{
-              width: 72, height: 72, borderRadius: '50%', margin: '0 auto 1.5rem',
-              background: 'rgba(74,222,128,0.12)', border: '2px solid rgba(74,222,128,0.4)',
+              width: 68, height: 68, borderRadius: '50%',
+              background: 'rgba(74,222,128,0.1)', border: '2px solid rgba(74,222,128,0.4)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 0 30px rgba(74,222,128,0.2)',
             }}>
-              <CheckCircle size={36} color="#4ADE80" />
+              <CheckCircle size={32} color="#4ADE80" />
             </div>
-            <h2 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '2rem', fontWeight: 700, color: '#EAEAEA', marginBottom: '0.5rem' }}>
-              Event Created!
-            </h2>
-            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8rem', color: '#9A9A9A', marginBottom: '2rem' }}>
-              Your event is live. Now set up the event details.
-            </p>
-            <div style={{
-              padding: '0.75rem 1.25rem', borderRadius: '0.75rem',
-              background: 'rgba(198,169,105,0.08)', border: '1px solid rgba(198,169,105,0.2)',
-              fontFamily: "'JetBrains Mono', monospace", fontSize: '0.9rem',
-              color: '#C6A969', fontWeight: 700, letterSpacing: '0.05em',
-              marginBottom: '2rem',
-            }}>
-              {createdEventId}
-            </div>
-            <button className="btn-primary w-full justify-center" onClick={() => navigate(`/event-details/${createdEventId}`)}>
-              Configure Event Details <Zap size={15} />
-            </button>
           </div>
-        </GlassCard>
+
+          <h1 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '2.5rem', fontWeight: 700, color: '#eaeaea', marginBottom: '0.5rem' }}>
+            Event Created!
+          </h1>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8rem', color: '#666', marginBottom: '2rem' }}>
+            Your event is ready. Configure it below.
+          </p>
+
+          <div style={{
+            padding: '12px 20px', borderRadius: 12, marginBottom: '2rem',
+            background: 'rgba(198,169,105,0.08)', border: '1px solid rgba(198,169,105,0.25)',
+            fontFamily: "'JetBrains Mono', monospace", fontSize: '1rem',
+            color: '#C6A969', fontWeight: 700, letterSpacing: '0.08em',
+          }}>
+            {createdEventId}
+          </div>
+
+          <Button fullWidth icon={<Zap size={15} />} onClick={() => navigate(`/event-details/${createdEventId}`)}>
+            Configure Event Details
+          </Button>
+        </div>
       </div>
     );
   }
 
+  /* ── Form ──────────────────────────────────────────────────── */
+  const SectionRow = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
+    <div className="ev-section-row">
+      {icon}
+      <span className="ev-section-row-label">{label}</span>
+    </div>
+  );
+
   return (
     <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.5rem' }}>
       <div style={{ maxWidth: 520, width: '100%' }}>
-        {/* Network Warning Banner */}
+
+        {/* Offline banner */}
         {!isOnline && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '0.75rem',
-            padding: '0.75rem 1rem', background: 'rgba(248,113,113,0.1)',
-            border: '1px solid rgba(248,113,113,0.3)', borderRadius: '0.75rem',
-            marginBottom: '1.5rem', animation: 'fadeIn 0.3s ease forwards',
-          }}>
-            <WifiOff size={18} color="#F87171" strokeWidth={2.5} />
-            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#F87171', margin: 0, fontWeight: 600 }}>
-              You are currently offline. Actions may fail.
-            </p>
+          <div className="ev-alert ev-alert-error" style={{ marginBottom: 24 }}>
+            <WifiOff size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>You are offline. Actions may fail until connection is restored.</span>
           </div>
         )}
 
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <h1 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '2.75rem', fontWeight: 700, color: '#EAEAEA', marginBottom: '0.5rem' }}>
-            Create Event
+        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+          <div className="ev-section-label" style={{ marginBottom: 12 }}>ORGANIZER PORTAL</div>
+          <h1 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: 'clamp(2rem,5vw,3rem)', fontWeight: 700, color: '#eaeaea', marginBottom: '0.5rem', lineHeight: 1.1 }}>
+            Create an Event
           </h1>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.82rem', color: '#9A9A9A' }}>
-            Organizer-only. You need the approval key to proceed.
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#666', lineHeight: 1.7 }}>
+            You need the approval key to create events.
           </p>
         </div>
 
-        <GlassCard>
+        <GlassCard accent>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {/* Approval Key */}
-            <div>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem',
-                paddingBottom: '0.75rem', borderBottom: '1px solid rgba(198,169,105,0.1)',
-              }}>
-                <Key size={14} color="#C6A969" />
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem', color: '#9A9A9A', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                  Authorization
-                </span>
-              </div>
+
+            <SectionRow icon={<Key size={14} color="#C6A969" />} label="Authorization" />
+            <Input
+              id="approvalKey"
+              label="Approval Key"
+              type="password"
+              placeholder="Enter the organizer approval key"
+              value={form.approvalKey}
+              onChange={(e) => setForm((f) => ({ ...f, approvalKey: e.target.value }))}
+              error={errors.approvalKey}
+              icon={<Key size={14} />}
+            />
+
+            <SectionRow icon={<Hash size={14} color="#C6A969" />} label="Event Identity" />
+            <Input
+              id="eventId"
+              label="Event ID"
+              type="text"
+              placeholder="e.g. hackathon2026"
+              value={form.eventId}
+              onChange={(e) => setForm((f) => ({ ...f, eventId: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
+              error={errors.eventId}
+              helper="Lowercase letters, numbers, hyphens only. Cannot be changed later."
+              icon={<Hash size={14} />}
+            />
+
+            <SectionRow icon={<Lock size={14} color="#C6A969" />} label="Security" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <Input
-                id="approvalKey"
-                label="Approval Key"
+                id="password"
+                label="Password"
                 type="password"
-                placeholder="Enter the organizer approval key"
-                value={form.approvalKey}
-                onChange={(e) => setForm((f) => ({ ...f, approvalKey: e.target.value }))}
-                error={errors.approvalKey}
-                icon={<Key size={15} />}
+                placeholder="Create a strong password"
+                value={form.password}
+                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                error={errors.password}
+                icon={<Lock size={14} />}
               />
-            </div>
-
-            {/* Event ID */}
-            <div>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem',
-                paddingBottom: '0.75rem', borderBottom: '1px solid rgba(198,169,105,0.1)',
-              }}>
-                <Hash size={14} color="#C6A969" />
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem', color: '#9A9A9A', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                  Event Identity
-                </span>
-              </div>
               <Input
-                id="eventId"
-                label="Event ID"
-                type="text"
-                placeholder="e.g. hackathon2026"
-                value={form.eventId}
-                onChange={(e) => setForm((f) => ({ ...f, eventId: e.target.value.toLowerCase().replace(/\s+/g, '-') }))}
-                error={errors.eventId}
-                helper="Lowercase letters, numbers, hyphens only. This cannot be changed later."
-                icon={<Hash size={15} />}
+                id="confirmPassword"
+                label="Confirm Password"
+                type="password"
+                placeholder="Re-enter your password"
+                value={form.confirmPassword}
+                onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                error={errors.confirmPassword}
+                icon={<Lock size={14} />}
               />
-            </div>
-
-            {/* Password */}
-            <div>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem',
-                paddingBottom: '0.75rem', borderBottom: '1px solid rgba(198,169,105,0.1)',
-              }}>
-                <Lock size={14} color="#C6A969" />
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem', color: '#9A9A9A', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                  Security
-                </span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <Input
-                  id="password"
-                  label="Password"
-                  type="password"
-                  placeholder="Create a strong password"
-                  value={form.password}
-                  onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  error={errors.password}
-                  icon={<Lock size={15} />}
-                />
-                <Input
-                  id="confirmPassword"
-                  label="Confirm Password"
-                  type="password"
-                  placeholder="Re-enter password"
-                  value={form.confirmPassword}
-                  onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
-                  error={errors.confirmPassword}
-                  icon={<Lock size={15} />}
-                />
-              </div>
             </div>
 
             {errors.submit && (
-              <div style={{
-                display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
-                padding: '1rem', background: 'rgba(248,113,113,0.08)',
-                border: '1px solid rgba(248,113,113,0.2)', borderRadius: '0.75rem'
-              }}>
-                <AlertCircle size={18} color="#F87171" style={{ marginTop: '0.1rem', flexShrink: 0 }} />
-                <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#F87171', margin: 0, lineHeight: 1.5 }}>
-                  {errors.submit}
-                </p>
+              <div className="ev-alert ev-alert-error">
+                <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>{errors.submit}</span>
               </div>
             )}
 
-            <Button type="submit" loading={loading} fullWidth icon={<Zap size={16} />}>
+            <Button type="submit" loading={loading} fullWidth size="lg" icon={<Zap size={16} />}>
               Create Event
             </Button>
           </form>
         </GlassCard>
 
-        <p style={{ textAlign: 'center', marginTop: '1.5rem', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#6a6a6a' }}>
-          The approval key is required to prevent unauthorized event creation.
+        <p style={{ textAlign: 'center', marginTop: '1.25rem', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem', color: '#333' }}>
+          The approval key prevents unauthorized event creation.
         </p>
       </div>
     </div>
