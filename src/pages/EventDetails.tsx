@@ -8,7 +8,10 @@ import { Input } from '@/components/Input';
 import { Textarea } from '@/components/Textarea';
 import { Button } from '@/components/Button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { Calendar, MapPin, Users, LinkIcon, FileText, Copy, CheckCheck, Zap, ShieldAlert } from 'lucide-react';
+import {
+  Calendar, MapPin, Users, LinkIcon, FileText, Copy, CheckCheck,
+  Zap, ShieldAlert, CalendarDays, Trophy, ChevronLeft, ChevronRight,
+} from 'lucide-react';
 import '@/styles/eventra-shared.css';
 
 export const EventDetails: React.FC = () => {
@@ -19,11 +22,16 @@ export const EventDetails: React.FC = () => {
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const [existing, setExisting] = useState(false);
+
   const [form, setForm] = useState({
     eventName: '', description: '', dateTime: '',
     teamSizeMin: '1', teamSizeMax: '5', venue: '',
     registrationDeadline: '', paymentLink: '',
     registrationOpen: true, maxTeams: '',
+    // Attendance (Days)
+    numberOfDays: '1', currentDay: 1,
+    // Rounds (Qualification)
+    numberOfRounds: '1', currentRound: 1,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -36,11 +44,11 @@ export const EventDetails: React.FC = () => {
       try {
         const [detailsSnap, settingsSnap] = await Promise.all([
           withRetry(() => get(ref(db, `events/${eventId}/details`))),
-          withRetry(() => get(ref(db, `events/${eventId}/eventSettings`)))
+          withRetry(() => get(ref(db, `events/${eventId}/eventSettings`))),
         ]);
         if (detailsSnap.exists() || settingsSnap.exists()) {
           const data = detailsSnap.val() || {};
-          const settings = settingsSnap.val() || {};
+          const s = settingsSnap.val() || {};
           setForm({
             eventName: data.eventName ?? '',
             description: data.description ?? '',
@@ -48,10 +56,14 @@ export const EventDetails: React.FC = () => {
             teamSizeMin: String(data.teamSizeMin ?? 1),
             teamSizeMax: String(data.teamSizeMax ?? 5),
             venue: data.venue ?? '',
-            registrationDeadline: settings.registrationDeadline ?? data.registrationDeadline ?? '',
+            registrationDeadline: s.registrationDeadline ?? data.registrationDeadline ?? '',
             paymentLink: data.paymentLink ?? '',
-            registrationOpen: settings.registrationOpen ?? true,
-            maxTeams: settings.maxTeams ? String(settings.maxTeams) : '',
+            registrationOpen: s.registrationOpen ?? true,
+            maxTeams: s.maxTeams ? String(s.maxTeams) : '',
+            numberOfDays: String(s.numberOfDays ?? 1),
+            currentDay: s.currentDay ?? 1,
+            numberOfRounds: String(s.numberOfRounds ?? 1),
+            currentRound: s.currentRound ?? 1,
           });
           setExisting(true);
         }
@@ -71,6 +83,8 @@ export const EventDetails: React.FC = () => {
     if (!form.venue.trim()) errs.venue = 'Venue / mode is required.';
     if (Number(form.teamSizeMin) < 1) errs.teamSizeMin = 'Min must be ≥ 1.';
     if (Number(form.teamSizeMax) < Number(form.teamSizeMin)) errs.teamSizeMax = 'Max must be ≥ min.';
+    if (Number(form.numberOfDays) < 1) errs.numberOfDays = 'Must be at least 1 day.';
+    if (Number(form.numberOfRounds) < 1) errs.numberOfRounds = 'Must be at least 1 round.';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -81,7 +95,12 @@ export const EventDetails: React.FC = () => {
     setSaving(true);
     try {
       const settingsSnap = await withRetry(() => get(ref(db, `events/${eventId}/eventSettings`)));
-      const currentSettings = settingsSnap.val() || { currentTeams: 0 };
+      const current = settingsSnap.val() || { currentTeams: 0 };
+      const totalDays = Number(form.numberOfDays);
+      const totalRounds = Number(form.numberOfRounds);
+      const safeDay = Math.min(Math.max(form.currentDay, 1), totalDays);
+      const safeRound = Math.min(Math.max(form.currentRound, 1), totalRounds);
+
       await Promise.all([
         withRetry(() => set(ref(db, `events/${eventId}/details`), {
           eventName: form.eventName, description: form.description, dateTime: form.dateTime,
@@ -89,12 +108,18 @@ export const EventDetails: React.FC = () => {
           venue: form.venue, paymentLink: form.paymentLink || null,
         })),
         withRetry(() => set(ref(db, `events/${eventId}/eventSettings`), {
-          ...currentSettings, registrationOpen: form.registrationOpen,
+          ...current,
+          registrationOpen: form.registrationOpen,
           registrationDeadline: form.registrationDeadline || null,
           maxTeams: form.maxTeams ? Number(form.maxTeams) : null,
-          currentTeams: currentSettings.currentTeams || 0,
-        }))
+          currentTeams: current.currentTeams || 0,
+          numberOfDays: totalDays,
+          currentDay: safeDay,
+          numberOfRounds: totalRounds,
+          currentRound: safeRound,
+        })),
       ]);
+      setForm(f => ({ ...f, currentDay: safeDay, currentRound: safeRound }));
       setSaved(true);
       setExisting(true);
       setTimeout(() => setSaved(false), 3000);
@@ -109,6 +134,16 @@ export const EventDetails: React.FC = () => {
     await navigator.clipboard.writeText(registrationUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const stepDay = (delta: number) => {
+    const max = Math.max(Number(form.numberOfDays), 1);
+    setForm(f => ({ ...f, currentDay: Math.min(Math.max(f.currentDay + delta, 1), max) }));
+  };
+
+  const stepRound = (delta: number) => {
+    const max = Math.max(Number(form.numberOfRounds), 1);
+    setForm(f => ({ ...f, currentRound: Math.min(Math.max(f.currentRound + delta, 1), max) }));
   };
 
   if (loading) {
@@ -126,9 +161,53 @@ export const EventDetails: React.FC = () => {
     </div>
   );
 
+  const Stepper = ({
+    value, max, onStep, label, color,
+  }: {
+    value: number; max: number; onStep: (d: number) => void; label: string; color: string;
+  }) => (
+    <div style={{
+      display: 'flex', alignItems: 'center',
+      background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 10, overflow: 'hidden',
+    }}>
+      <button type="button" onClick={() => onStep(-1)} disabled={value <= 1}
+        style={{
+          padding: '11px 16px', background: 'transparent', border: 'none',
+          borderRight: '1px solid rgba(255,255,255,0.06)',
+          cursor: value <= 1 ? 'not-allowed' : 'pointer',
+          color: value <= 1 ? '#2a2a2a' : '#666',
+          display: 'flex', alignItems: 'center',
+        }}>
+        <ChevronLeft size={16} />
+      </button>
+      <div style={{ flex: 1, textAlign: 'center', padding: '10px 0' }}>
+        <span style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.5rem', fontWeight: 700, color }}>
+          {label} {value}
+        </span>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem', color: '#555', marginLeft: 8 }}>
+          of {max}
+        </span>
+      </div>
+      <button type="button" onClick={() => onStep(1)} disabled={value >= max}
+        style={{
+          padding: '11px 16px', background: 'transparent', border: 'none',
+          borderLeft: '1px solid rgba(255,255,255,0.06)',
+          cursor: value >= max ? 'not-allowed' : 'pointer',
+          color: value >= max ? '#2a2a2a' : '#666',
+          display: 'flex', alignItems: 'center',
+        }}>
+        <ChevronRight size={16} />
+      </button>
+    </div>
+  );
+
+  const totalDays = Math.max(Number(form.numberOfDays) || 1, 1);
+  const totalRounds = Math.max(Number(form.numberOfRounds) || 1, 1);
+
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '3rem 1.5rem' }}>
-      {/* Header */}
+      {/* ── Header ──────────────────────────────────────────── */}
       <div style={{ marginBottom: '2.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
           <span className="ev-pill ev-pill-gold">{eventId}</span>
@@ -138,60 +217,101 @@ export const EventDetails: React.FC = () => {
           Event Details
         </h1>
         <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#555', lineHeight: 1.7 }}>
-          Configure your event. Teams will see this on the registration page.
+          Configure your event. Teams see this on the registration page.
         </p>
       </div>
 
-      {/* Registration URL */}
+      {/* ── Registration URL ─────────────────────────────────── */}
       <GlassCard padding="sm" style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-            background: 'rgba(198,169,105,0.08)', border: '1px solid rgba(198,169,105,0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: 'rgba(198,169,105,0.08)', border: '1px solid rgba(198,169,105,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <LinkIcon size={15} color="#C6A969" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p className="ev-section-label" style={{ marginBottom: 3 }}>Registration URL</p>
-            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#C6A969', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {registrationUrl}
-            </p>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#C6A969', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{registrationUrl}</p>
           </div>
-          <button
-            onClick={handleCopy}
-            className="ev-btn ev-btn-secondary ev-btn-sm"
-            style={{ flexShrink: 0, gap: 6 }}
-          >
+          <button onClick={handleCopy} className="ev-btn ev-btn-secondary ev-btn-sm" style={{ flexShrink: 0, gap: 6 }}>
             {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
             {copied ? 'Copied' : 'Copy'}
           </button>
         </div>
       </GlassCard>
 
-      {/* Form */}
+      {/* ── Form ─────────────────────────────────────────────── */}
       <GlassCard accent>
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
+          {/* Basic Info */}
           <SRow icon={<FileText size={14} color="#C6A969" />} label="Basic Information" />
           <Input id="eventName" label="Event Name" placeholder="e.g. National Hackathon 2026"
-            value={form.eventName} onChange={(e) => setForm((f) => ({ ...f, eventName: e.target.value }))} error={errors.eventName} />
+            value={form.eventName} onChange={(e) => setForm(f => ({ ...f, eventName: e.target.value }))} error={errors.eventName} />
           <Textarea id="description" label="Description" placeholder="Tell participants what this event is about..."
-            value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} error={errors.description} />
+            value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} error={errors.description} />
 
+          {/* Schedule */}
           <SRow icon={<Calendar size={14} color="#C6A969" />} label="Schedule" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <Input id="dateTime" label="Date & Time" type="datetime-local"
-              value={form.dateTime} onChange={(e) => setForm((f) => ({ ...f, dateTime: e.target.value }))} />
+              value={form.dateTime} onChange={(e) => setForm(f => ({ ...f, dateTime: e.target.value }))} />
             <Input id="registrationDeadline" label="Registration Deadline" type="datetime-local"
-              value={form.registrationDeadline} onChange={(e) => setForm((f) => ({ ...f, registrationDeadline: e.target.value }))} />
+              value={form.registrationDeadline} onChange={(e) => setForm(f => ({ ...f, registrationDeadline: e.target.value }))} />
           </div>
 
+          {/* ── Attendance Days ───────────────────────────────── */}
+          <SRow icon={<CalendarDays size={14} color="#4ADE80" />} label="Attendance — Event Days" />
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem', color: '#555', marginTop: -12, lineHeight: 1.6 }}>
+            Attendance is tracked per day. The scanner uses the current day setting below.
+          </p>
+          <Input id="numberOfDays" label="Number of Event Days" type="number" min="1"
+            placeholder="e.g. 3"
+            value={form.numberOfDays}
+            onChange={(e) => {
+              const val = e.target.value;
+              setForm(f => ({
+                ...f,
+                numberOfDays: val,
+                currentDay: Math.min(f.currentDay, Math.max(Number(val) || 1, 1)),
+              }));
+            }}
+            error={errors.numberOfDays}
+            helper="Total days attendance will be scanned"
+          />
+          <div className="ev-field-wrap">
+            <label className="ev-label">Current Active Day <span style={{ color: '#444', fontWeight: 400 }}>— advance to unlock next-day scanning</span></label>
+            <Stepper value={form.currentDay} max={totalDays} onStep={stepDay} label="Day" color="#4ADE80" />
+          </div>
+
+          {/* ── Competition Rounds ────────────────────────────── */}
+          <SRow icon={<Trophy size={14} color="#818CF8" />} label="Competition Rounds — Qualification" />
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem', color: '#555', marginTop: -12, lineHeight: 1.6 }}>
+            Rounds are used to qualify teams. No attendance scanning per round — manage qualified teams from the Dashboard.
+          </p>
+          <Input id="numberOfRounds" label="Number of Rounds" type="number" min="1"
+            placeholder="e.g. 3"
+            value={form.numberOfRounds}
+            onChange={(e) => {
+              const val = e.target.value;
+              setForm(f => ({
+                ...f,
+                numberOfRounds: val,
+                currentRound: Math.min(f.currentRound, Math.max(Number(val) || 1, 1)),
+              }));
+            }}
+            error={errors.numberOfRounds}
+            helper="Total competition rounds for qualification"
+          />
+          <div className="ev-field-wrap">
+            <label className="ev-label">Current Active Round <span style={{ color: '#444', fontWeight: 400 }}>— advance to manage next round's qualifications</span></label>
+            <Stepper value={form.currentRound} max={totalRounds} onStep={stepRound} label="Round" color="#818CF8" />
+          </div>
+
+          {/* Registration Control */}
           <SRow icon={<ShieldAlert size={14} color="#C6A969" />} label="Registration Control" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'end' }}>
             <div className="ev-field-wrap">
               <label className="ev-label">Status</label>
-              <button
-                type="button"
+              <button type="button"
                 onClick={() => setForm(f => ({ ...f, registrationOpen: !f.registrationOpen }))}
                 className={['ev-btn', form.registrationOpen ? 'ev-btn-secondary' : 'ev-btn-danger'].join(' ')}
                 style={{
@@ -199,8 +319,7 @@ export const EventDetails: React.FC = () => {
                   border: form.registrationOpen ? '1px solid rgba(74,222,128,0.3)' : undefined,
                   background: form.registrationOpen ? 'rgba(74,222,128,0.08)' : undefined,
                   color: form.registrationOpen ? '#4ADE80' : undefined,
-                }}
-              >
+                }}>
                 {form.registrationOpen ? '✓ Registration Open' : '✗ Registration Closed'}
               </button>
             </div>
@@ -209,22 +328,24 @@ export const EventDetails: React.FC = () => {
               value={form.maxTeams} onChange={(e) => setForm(f => ({ ...f, maxTeams: e.target.value }))} />
           </div>
 
+          {/* Venue & Team Config */}
           <SRow icon={<MapPin size={14} color="#C6A969" />} label="Venue & Team Configuration" />
           <Input id="venue" label="Venue / Mode" placeholder="e.g. Main Auditorium or Online (Google Meet)"
-            value={form.venue} onChange={(e) => setForm((f) => ({ ...f, venue: e.target.value }))} error={errors.venue} />
+            value={form.venue} onChange={(e) => setForm(f => ({ ...f, venue: e.target.value }))} error={errors.venue} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <Input id="teamSizeMin" label="Min Team Size" type="number" min="1"
-              value={form.teamSizeMin} onChange={(e) => setForm((f) => ({ ...f, teamSizeMin: e.target.value }))}
+              value={form.teamSizeMin} onChange={(e) => setForm(f => ({ ...f, teamSizeMin: e.target.value }))}
               error={errors.teamSizeMin} icon={<Users size={13} />} />
             <Input id="teamSizeMax" label="Max Team Size" type="number" min="1"
-              value={form.teamSizeMax} onChange={(e) => setForm((f) => ({ ...f, teamSizeMax: e.target.value }))}
+              value={form.teamSizeMax} onChange={(e) => setForm(f => ({ ...f, teamSizeMax: e.target.value }))}
               error={errors.teamSizeMax} icon={<Users size={13} />} />
           </div>
 
+          {/* Payment */}
           <SRow icon={<LinkIcon size={14} color="#C6A969" />} label="Payment (Optional)" />
           <Input id="paymentLink" label="Payment Link" type="url"
             placeholder="https://razorpay.com/..."
-            value={form.paymentLink} onChange={(e) => setForm((f) => ({ ...f, paymentLink: e.target.value }))}
+            value={form.paymentLink} onChange={(e) => setForm(f => ({ ...f, paymentLink: e.target.value }))}
             helper="Optional. Shown to participants after registration." />
 
           {saved && (
