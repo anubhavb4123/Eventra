@@ -11,14 +11,15 @@ import { OrganizerLogin } from '@/pages/OrganizerLogin';
 import { Dashboard } from '@/pages/Dashboard';
 import { ScanAttendance } from '@/pages/ScanAttendance';
 import { Ticket } from '@/pages/Ticket';
+import { Leaderboard } from '@/pages/Leaderboard';
 
 const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Home />} />
         <Route element={<Layout />}>
           {/* ── Public routes ─────────────────────────────────── */}
-          <Route index element={<Home />} />
           <Route path="create-event" element={<CreateEvent />} />
           <Route path="organizer-login" element={<OrganizerLogin />} />
 
@@ -27,6 +28,7 @@ const App: React.FC = () => {
           <Route path="register/:eventId" element={<Register />} />
           <Route path="registration-success/:eventId/:teamId" element={<RegistrationSuccess />} />
           <Route path="ticket/:eventId/:teamId" element={<Ticket />} />
+          <Route path="leaderboard/:eventId" element={<Leaderboard />} />
 
           {/* ── Protected routes (organizer login required) ────── */}
           <Route
