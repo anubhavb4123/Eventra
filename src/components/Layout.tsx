@@ -78,7 +78,7 @@ export const Layout: React.FC = () => {
             fontSize: '0.68rem', color: '#333',
             letterSpacing: '0.06em',
           }}>
-            © 2026 · Event management, reimagined
+            © 2026 · Built by ANUBHAV BAJPAI
           </span>
         </div>
       </footer>
