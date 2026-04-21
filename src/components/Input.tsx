@@ -1,4 +1,5 @@
 import React from 'react';
+import { haptic } from '@/lib/haptics';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -14,8 +15,20 @@ export const Input: React.FC<InputProps> = ({
   icon,
   className = '',
   id,
+  onChange,
+  onFocus,
   ...props
 }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (props.type === 'checkbox') haptic.light();
+    if (onChange) onChange(e);
+  };
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    haptic.light();
+    if (onFocus) onFocus(e);
+  };
+
   return (
     <div className="ev-field-wrap">
       {label && (
@@ -31,6 +44,8 @@ export const Input: React.FC<InputProps> = ({
           id={id}
           className={['ev-input', error ? 'ev-input-error' : '', className].filter(Boolean).join(' ')}
           style={icon ? { paddingLeft: 38 } : undefined}
+          onChange={handleChange}
+          onFocus={handleFocus}
           {...props}
         />
       </div>
