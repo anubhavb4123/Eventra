@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { ref, get, update } from 'firebase/database';
 import { db } from '@/lib/firebase';
 import { withRetry } from '@/lib/db-retry';
+import { haptic } from '@/lib/haptics';
 import type { TeamWithId } from '@/types';
 import { GlassCard } from '@/components/GlassCard';
 import { QRScanner } from '@/components/QRScanner';
@@ -57,6 +58,7 @@ export const ScanAttendance: React.FC = () => {
       const parts = decoded.split('|');
       if (parts.length !== 2) {
         setErrorMsg('Invalid QR code format. Expected eventId|teamId.');
+        haptic.error();
         setScanState('error'); return;
       }
       const [scannedEventId, scannedTeamId] = parts;
@@ -64,12 +66,14 @@ export const ScanAttendance: React.FC = () => {
 
       if (scannedEventId !== eventId) {
         setErrorMsg(`QR belongs to a different event: "${scannedEventId}".`);
+        haptic.error();
         setScanState('error'); return;
       }
 
       const teamSnap = await withRetry(() => get(ref(db, `events/${scannedEventId}/teams/${teamCode}`)));
       if (!teamSnap.exists()) {
         setErrorMsg(`Team "${scannedTeamId}" not found in database.`);
+        haptic.error();
         setScanState('error'); return;
       }
       const teamData = { id: scannedTeamId, ...teamSnap.val() } as TeamWithId;
@@ -78,16 +82,19 @@ export const ScanAttendance: React.FC = () => {
       const dayKey = String(currentDay);
       if (teamData.dayAttendance?.[dayKey]?.marked) {
         setTeam(teamData);
+        haptic.light();
         setScanState('duplicate');
         return;
       }
 
       setTeam(teamData);
       setMemberPresence(teamData.members.map(() => true));
+      haptic.light();
       setScanState('found');
     } catch (err) {
       console.error('Scan Error:', err);
       setErrorMsg('Failed to fetch team data. Check your connection.');
+      haptic.error();
       setScanState('error');
     }
   };
@@ -113,10 +120,12 @@ export const ScanAttendance: React.FC = () => {
       }
 
       await withRetry(() => update(ref(db, `events/${eventId}/teams/${teamCode}`), updates));
+      haptic.success();
       setScanState('success');
     } catch (err) {
       console.error('Attendance Save Error:', err);
       setErrorMsg('Failed to save attendance. Please try again.');
+      haptic.error();
       setScanState('error');
     } finally {
       setSaving(false);
@@ -126,7 +135,10 @@ export const ScanAttendance: React.FC = () => {
   const resetScan = () => {
     setTeam(null); setMemberPresence([]); setErrorMsg(''); setScanState('scanning');
   };
-  const toggleMember = (i: number) => setMemberPresence(p => p.map((v, idx) => idx === i ? !v : v));
+  const toggleMember = (i: number) => {
+    haptic.light();
+    setMemberPresence(p => p.map((v, idx) => idx === i ? !v : v));
+  };
 
   // Day colour
   const dayColor = currentDay === 1 ? '#4ADE80' : currentDay === 2 ? '#60A5FA' : '#F472B6';
