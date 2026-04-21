@@ -4,6 +4,7 @@ import { ref, get, set, runTransaction, serverTimestamp } from 'firebase/databas
 import { db } from '@/lib/firebase';
 import { generateTeamId, formatDate } from '@/lib/utils';
 import { withRetry } from '@/lib/db-retry';
+import { haptic } from '@/lib/haptics';
 import { GlassCard } from '@/components/GlassCard';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
@@ -14,9 +15,10 @@ import '@/styles/eventra-shared.css';
 
 interface LocalMemberForm extends MemberForm {
   sameCollegeAsLeader?: boolean;
+  sameBranchAsLeader?: boolean;
 }
 
-const emptyMember = (): LocalMemberForm => ({ name: '', rollNumber: '', college: '', branch: '', sameCollegeAsLeader: false });
+const emptyMember = (): LocalMemberForm => ({ name: '', rollNumber: '', college: '', branch: '', sameCollegeAsLeader: false, sameBranchAsLeader: false });
 
 export const Register: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -92,8 +94,13 @@ export const Register: React.FC = () => {
     if (total < min) errs.memberCount = `Minimum team size is ${min} (including leader).`;
     if (total > max) errs.memberCount = `Maximum team size is ${max} (including leader).`;
     members.forEach((m, i) => { if (!m.name.trim()) errs[`member_${i}_name`] = 'Name is required.'; });
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      haptic.error();
+      return false;
+    }
+    setErrors({});
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,7 +124,13 @@ export const Register: React.FC = () => {
       const teamCode = teamId.split('-').pop() || teamId;
       const allMembers = [
         { name: leader, rollNumber: leaderRoll, college: leaderCollege, branch: leaderBranch, present: false },
-        ...members.map((m) => ({ name: m.name, rollNumber: m.rollNumber, college: m.sameCollegeAsLeader ? leaderCollege : m.college, branch: m.branch, present: false })),
+        ...members.map((m) => ({
+          name: m.name,
+          rollNumber: m.rollNumber,
+          college: m.sameCollegeAsLeader ? leaderCollege : m.college,
+          branch: m.sameBranchAsLeader ? leaderBranch : m.branch,
+          present: false
+        })),
       ];
       const updates: any = {};
       updates[`events/${eventId}/teams/${teamCode}`] = { teamId, teamName, leader, email: email || null, members: allMembers, attendanceMarked: false, createdAt: serverTimestamp() };
@@ -127,6 +140,7 @@ export const Register: React.FC = () => {
         const keys = path.split('/'); const prop = keys.pop()!; const base = keys.join('/');
         return withRetry(() => set(ref(db, `${base}/${prop}`), updates[path]));
       }, Promise.resolve());
+      haptic.success();
       navigate(`/registration-success/${eventId}/${teamId}`);
     } catch (err) {
       console.error('Registration Error:', err);
@@ -251,21 +265,44 @@ export const Register: React.FC = () => {
                     value={m.name} onChange={(e) => updateMember(i, 'name', e.target.value)} error={errors[`member_${i}_name`]} />
                   <Input id={`member_${i}_roll`} label="Roll Number" placeholder="21CS001"
                     value={m.rollNumber} onChange={(e) => updateMember(i, 'rollNumber', e.target.value)} />
-                  <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <input type="checkbox" id={`same_college_${i}`} checked={m.sameCollegeAsLeader || false}
-                      onChange={(e) => updateMember(i, 'sameCollegeAsLeader', e.target.checked)}
-                      className="ev-checkbox" />
-                    <label htmlFor={`same_college_${i}`} style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.76rem', color: '#888', cursor: 'pointer' }}>
-                      Same college as leader
-                    </label>
+
+                  <div style={{ gridColumn: 'span 1' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <input type="checkbox" id={`same_college_${i}`} checked={m.sameCollegeAsLeader || false}
+                        onChange={(e) => {
+                          haptic.light();
+                          updateMember(i, 'sameCollegeAsLeader', e.target.checked);
+                        }}
+                        className="ev-checkbox" />
+                      <label htmlFor={`same_college_${i}`} style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.76rem', color: '#888', cursor: 'pointer' }}>
+                        Same college as leader
+                      </label>
+                    </div>
+                    <Input id={`member_${i}_college`} label="College"
+                      placeholder={m.sameCollegeAsLeader ? 'Same as leader' : 'College name'}
+                      value={m.sameCollegeAsLeader ? leaderCollege : m.college}
+                      onChange={(e) => updateMember(i, 'college', e.target.value)}
+                      disabled={m.sameCollegeAsLeader} />
                   </div>
-                  <Input id={`member_${i}_college`} label="College"
-                    placeholder={m.sameCollegeAsLeader ? 'Same as leader' : 'College name'}
-                    value={m.sameCollegeAsLeader ? leaderCollege : m.college}
-                    onChange={(e) => updateMember(i, 'college', e.target.value)}
-                    disabled={m.sameCollegeAsLeader} />
-                  <Input id={`member_${i}_branch`} label="Branch" placeholder="e.g. CSE, ECE"
-                    value={m.branch} onChange={(e) => updateMember(i, 'branch', e.target.value)} />
+
+                  <div style={{ gridColumn: 'span 1' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <input type="checkbox" id={`same_branch_${i}`} checked={m.sameBranchAsLeader || false}
+                        onChange={(e) => {
+                          haptic.light();
+                          updateMember(i, 'sameBranchAsLeader', e.target.checked);
+                        }}
+                        className="ev-checkbox" />
+                      <label htmlFor={`same_branch_${i}`} style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.76rem', color: '#888', cursor: 'pointer' }}>
+                        Same branch as leader
+                      </label>
+                    </div>
+                    <Input id={`member_${i}_branch`} label="Branch"
+                      placeholder={m.sameBranchAsLeader ? 'Same as leader' : 'e.g. CSE, ECE'}
+                      value={m.sameBranchAsLeader ? leaderBranch : m.branch}
+                      onChange={(e) => updateMember(i, 'branch', e.target.value)}
+                      disabled={m.sameBranchAsLeader} />
+                  </div>
                 </div>
               </div>
             ))}
