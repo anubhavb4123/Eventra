@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { ref, get } from 'firebase/database';
+import confetti from 'canvas-confetti';
+import { haptic } from '@/lib/haptics';
 import { db } from '@/lib/firebase';
 import { withRetry } from '@/lib/db-retry';
 import type { TeamWithId, EventDetails as EventDetailsType } from '@/types';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { GlassCard } from '@/components/GlassCard';
+import { Button } from '@/components/Button';
 import {
   Trophy, Search, CalendarDays, AlertCircle,
   Star, StarOff, ChevronRight, Medal, Users,
@@ -24,6 +27,8 @@ export const Leaderboard: React.FC = () => {
   const [totalDays, setTotalDays] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [highlightId, setHighlightId] = useState('');
+  const [isRevealed, setIsRevealed] = useState(false);
+  const celebrationFired = useRef(false);
 
   useEffect(() => {
     if (!eventId) return;
@@ -73,7 +78,32 @@ export const Leaderboard: React.FC = () => {
   const winner1 = teams.find(t => t.position === 1);
   const winner2 = teams.find(t => t.position === 2);
   const winner3 = teams.find(t => t.position === 3);
-  const hasWinners = isLastRound && (winner1 || winner2 || winner3);
+  const winnersDeclared = isLastRound && (winner1 || winner2 || winner3);
+
+  // ── Celebration Effect ──────────────────────────────────────
+  const fireCelebration = () => {
+    haptic.celebration();
+    const duration = 5 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    function randomInRange(min: number, max: number) {
+      return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      // since particles fall down, start a bit higher than random
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+    }, 250);
+  };
 
   // Filter
   const filtered = teams.filter(t => {
@@ -177,9 +207,42 @@ export const Leaderboard: React.FC = () => {
         </p>
       </div>
 
-      {/* ── Winners Podium ───────────────────────────────────────── */}
-      {hasWinners && (
-        <GlassCard style={{ marginBottom: '2rem', textAlign: 'center' }}>
+      {/* ── Winners Podium / Reveal Interaction ───────────────────── */}
+      {winnersDeclared && !isRevealed && (
+        <GlassCard accent style={{ marginBottom: '2rem', textAlign: 'center', padding: '3rem 2rem', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(circle at center, rgba(198,169,105,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{
+            width: 80, height: 80, borderRadius: '50%', margin: '0 auto 1.5rem',
+            background: 'rgba(198,169,105,0.08)', border: '1px solid rgba(198,169,105,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 0 40px rgba(198,169,105,0.1)',
+            animation: 'ev-pulse 2s infinite'
+          }}>
+            <Medal size={40} color="#C6A969" />
+          </div>
+          <h2 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '2.2rem', fontWeight: 700, color: '#eaeaea', marginBottom: '0.75rem', lineHeight: 1.1 }}>
+            The Results Are In!
+          </h2>
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.85rem', color: '#666', marginBottom: '2rem', maxWidth: 400, margin: '0 auto 2rem' }}>
+            The final round has concluded. Tap the golden seal below to reveal the champions of {eventDetails?.eventName}.
+          </p>
+          <Button 
+            variant="primary" 
+            size="lg" 
+            icon={<Trophy size={18} />}
+            onClick={() => {
+              setIsRevealed(true);
+              fireCelebration();
+            }}
+            style={{ padding: '1rem 2.5rem', fontSize: '1.1rem', boxShadow: '0 10px 30px rgba(198,169,105,0.15)' }}
+          >
+            Reveal Rankings
+          </Button>
+        </GlassCard>
+      )}
+
+      {winnersDeclared && isRevealed && (
+        <GlassCard className="ev-scale-in" style={{ marginBottom: '2rem', textAlign: 'center' }}>
           <p className="ev-section-label" style={{ marginBottom: '1.25rem' }}>🏆 Final Rankings</p>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
             {/* 2nd */}
