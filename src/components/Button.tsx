@@ -1,4 +1,5 @@
 import React from 'react';
+import { haptic } from '@/lib/haptics';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -18,6 +19,7 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   disabled,
   style,
+  onClick,
   ...props
 }) => {
   const variantCls = {
@@ -29,11 +31,17 @@ export const Button: React.FC<ButtonProps> = ({
 
   const sizeCls = { sm: 'ev-btn-sm', md: '', lg: 'ev-btn-lg' }[size];
 
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    haptic.medium();
+    if (onClick) onClick(e);
+  };
+
   return (
     <button
       className={[variantCls, sizeCls, fullWidth ? 'ev-btn-full' : '', className].filter(Boolean).join(' ')}
       disabled={disabled || loading}
       style={style}
+      onClick={handleClick}
       {...props}
     >
       {loading ? (
