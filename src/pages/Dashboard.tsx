@@ -9,6 +9,89 @@ import { useAuth } from '@/context/AuthContext';
 import { GlassCard } from '@/components/GlassCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { SkBox, SkCard, SkStatBox, SkRow } from '@/components/Skeleton';
+
+/* ── Dashboard Skeleton ─────────────────────────────────────── */
+const DashboardSkeleton: React.FC = () => (
+  <div style={{ maxWidth: 1100, margin: '0 auto', padding: '3rem 1.5rem', animation: 'ev-fade-up 0.35s ease forwards' }}>
+    {/* Header */}
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <SkBox w={90} h={22} r={9999} />
+          <SkBox w={80} h={22} r={9999} />
+          <SkBox w={80} h={22} r={9999} />
+        </div>
+        <SkBox w={280} h={36} r={8} />
+      </div>
+      <div style={{ display: 'flex', gap: 6 }}>
+        <SkBox w={80} h={32} r={10} />
+        <SkBox w={60} h={32} r={10} />
+        <SkBox w={80} h={32} r={10} />
+        <SkBox w={36} h={32} r={10} />
+        <SkBox w={36} h={32} r={10} />
+      </div>
+    </div>
+
+    {/* Registration link card */}
+    <SkCard style={{ marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <SkBox w={36} h={36} r={10} style={{ flexShrink: 0 }} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
+          <SkBox w={180} h={10} r={4} />
+          <SkBox w="70%" h={12} r={4} />
+        </div>
+        <SkBox w={70} h={30} r={10} style={{ flexShrink: 0 }} />
+      </div>
+    </SkCard>
+
+    {/* Leaderboard link card */}
+    <SkCard style={{ marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <SkBox w={36} h={36} r={10} style={{ flexShrink: 0 }} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
+          <SkBox w={220} h={10} r={4} />
+          <SkBox w="55%" h={12} r={4} />
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <SkBox w={56} h={30} r={10} />
+          <SkBox w={70} h={30} r={10} />
+        </div>
+      </div>
+    </SkCard>
+
+    {/* Stat boxes */}
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+      <SkStatBox />
+      <SkStatBox />
+      <SkStatBox />
+      <SkStatBox />
+    </div>
+
+    {/* Progress card */}
+    <SkCard style={{ marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+        <SkBox w={160} h={11} r={4} />
+        <SkBox w={36} h={11} r={4} />
+      </div>
+      <SkBox w="100%" h={6} r={3} />
+    </SkCard>
+
+    {/* Tab bar */}
+    <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: 4, width: 'fit-content', marginBottom: '1.5rem' }}>
+      {[100, 130, 70, 90].map((w, i) => <SkBox key={i} w={w} h={32} r={8} />)}
+    </div>
+
+    {/* Team rows */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <SkRow key={i} showDots={2} />
+      ))}
+    </div>
+  </div>
+);
+
+
 import { QRCodeDisplay } from '@/components/QRCodeDisplay';
 import { EmailPanel } from '@/components/EmailPanel';
 import {
@@ -238,11 +321,7 @@ export const Dashboard: React.FC = () => {
   }
 
   if (loading && teams.length === 0) {
-    return (
-      <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <LoadingSpinner text="Loading dashboard..." />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
