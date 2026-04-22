@@ -8,6 +8,98 @@ import { Input } from '@/components/Input';
 import { Textarea } from '@/components/Textarea';
 import { Button } from '@/components/Button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { SkBox, SkCard } from '@/components/Skeleton';
+
+/* ── EventDetails Skeleton ──────────────────────────────────── */
+const EventDetailsSkeleton: React.FC = () => (
+  <div style={{ maxWidth: 720, margin: '0 auto', padding: '3rem 1.5rem', animation: 'ev-fade-up 0.35s ease forwards' }}>
+    {/* Header */}
+    <div style={{ marginBottom: '2.5rem' }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <SkBox w={90} h={22} r={9999} />
+        <SkBox w={80} h={22} r={9999} />
+      </div>
+      <SkBox w="65%" h={44} r={10} style={{ marginBottom: 10 }} />
+      <SkBox w="80%" h={12} r={4} />
+    </div>
+
+    {/* Registration URL card */}
+    <SkCard style={{ marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <SkBox w={36} h={36} r={10} style={{ flexShrink: 0 }} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
+          <SkBox w={120} h={10} r={4} />
+          <SkBox w="60%" h={12} r={4} />
+        </div>
+        <SkBox w={70} h={30} r={10} style={{ flexShrink: 0 }} />
+      </div>
+    </SkCard>
+
+    {/* Form card */}
+    <SkCard>
+      {/* Section: Basic Info */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10, borderBottom: '1px solid rgba(198,169,105,0.08)', marginBottom: 20 }}>
+        <SkBox w={14} h={14} r={4} />
+        <SkBox w={120} h={10} r={4} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 28 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <SkBox w={80} h={10} r={4} />
+          <SkBox w="100%" h={40} r={10} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <SkBox w={80} h={10} r={4} />
+          <SkBox w="100%" h={76} r={10} />
+        </div>
+      </div>
+
+      {/* Section: Schedule */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10, borderBottom: '1px solid rgba(198,169,105,0.08)', marginBottom: 20 }}>
+        <SkBox w={14} h={14} r={4} />
+        <SkBox w={80} h={10} r={4} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: 28 }}>
+        {[0, 1].map(i => (
+          <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <SkBox w={100} h={10} r={4} />
+            <SkBox w="100%" h={40} r={10} />
+          </div>
+        ))}
+      </div>
+
+      {/* Section: Attendance */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10, borderBottom: '1px solid rgba(198,169,105,0.08)', marginBottom: 20 }}>
+        <SkBox w={14} h={14} r={4} />
+        <SkBox w={160} h={10} r={4} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 28 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <SkBox w={120} h={10} r={4} />
+          <SkBox w="100%" h={40} r={10} />
+        </div>
+        <SkBox w="100%" h={52} r={10} />
+      </div>
+
+      {/* Section: Rounds */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10, borderBottom: '1px solid rgba(198,169,105,0.08)', marginBottom: 20 }}>
+        <SkBox w={14} h={14} r={4} />
+        <SkBox w={180} h={10} r={4} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 28 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <SkBox w={110} h={10} r={4} />
+          <SkBox w="100%" h={40} r={10} />
+        </div>
+        <SkBox w="100%" h={52} r={10} />
+      </div>
+
+      {/* Submit button */}
+      <SkBox w="100%" h={48} r={10} />
+    </SkCard>
+  </div>
+);
+
+
 import {
   Calendar, MapPin, Users, LinkIcon, FileText, Copy, CheckCheck,
   Zap, ShieldAlert, CalendarDays, Trophy, ChevronLeft, ChevronRight,
@@ -147,11 +239,7 @@ export const EventDetails: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <LoadingSpinner text="Loading event details..." />
-      </div>
-    );
+    return <EventDetailsSkeleton />;
   }
 
   const SRow = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
