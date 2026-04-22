@@ -7,6 +7,58 @@ import { db } from '@/lib/firebase';
 import { withRetry } from '@/lib/db-retry';
 import type { TeamWithId, EventDetails as EventDetailsType } from '@/types';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { SkBox, SkCard, SkRow } from '@/components/Skeleton';
+
+/* ── Leaderboard Skeleton ───────────────────────────────────── */
+const LeaderboardSkeleton: React.FC = () => (
+  <div style={{ maxWidth: 780, margin: '0 auto', padding: '3rem 1.5rem', animation: 'ev-fade-up 0.35s ease forwards' }}>
+    {/* Centered header */}
+    <div style={{ textAlign: 'center', marginBottom: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+      {/* Trophy icon placeholder */}
+      <SkBox w={72} h={72} r={20} />
+      {/* Pills */}
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <SkBox w={90} h={22} r={9999} />
+        <SkBox w={80} h={22} r={9999} />
+        <SkBox w={80} h={22} r={9999} />
+      </div>
+      {/* Title */}
+      <SkBox w={280} h={44} r={10} />
+      {/* Subtitle */}
+      <SkBox w={230} h={12} r={4} />
+    </div>
+
+    {/* Round progress pills */}
+    <div style={{ display: 'flex', gap: 8, marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      <SkBox w={50} h={11} r={4} />
+      {[80, 80, 80].map((w, i) => (
+        <SkBox key={i} w={w} h={24} r={9999} />
+      ))}
+    </div>
+
+    {/* Search bar */}
+    <SkBox w="100%" h={42} r={10} style={{ marginBottom: '1rem' }} />
+
+    {/* Stats strip */}
+    <div style={{ display: 'flex', gap: 20, marginBottom: '1.25rem' }}>
+      {[120, 160, 90].map((w, i) => <SkBox key={i} w={w} h={12} r={4} />)}
+    </div>
+
+    {/* Team rows */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <SkRow key={i} showDots={3} />
+      ))}
+    </div>
+
+    {/* Footer rule */}
+    <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'center' }}>
+      <SkBox w={200} h={10} r={4} />
+    </div>
+  </div>
+);
+
+
 import { GlassCard } from '@/components/GlassCard';
 import { Button } from '@/components/Button';
 import {
@@ -162,11 +214,7 @@ export const Leaderboard: React.FC = () => {
   const dayColor = currentDay === 1 ? '#4ADE80' : currentDay === 2 ? '#60A5FA' : '#F472B6';
 
   if (loading) {
-    return (
-      <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <LoadingSpinner text="Loading leaderboard..." />
-      </div>
-    );
+    return <LeaderboardSkeleton />;
   }
 
   return (
