@@ -10,6 +10,52 @@ import { QRScanner } from '@/components/QRScanner';
 import { SuccessAnimation } from '@/components/SuccessAnimation';
 import { Button } from '@/components/Button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { SkBox, SkCard } from '@/components/Skeleton';
+
+/* ── Scan Attendance Skeleton ───────────────────────────────── */
+const ScanSkeleton: React.FC = () => (
+  <div style={{ maxWidth: 620, margin: '0 auto', padding: '3rem 1.5rem', animation: 'ev-fade-up 0.35s ease forwards' }}>
+    {/* Header */}
+    <div style={{ textAlign: 'center', marginBottom: '2.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+      {/* Icon */}
+      <SkBox w={64} h={64} r={16} />
+      {/* Label */}
+      <SkBox w={220} h={10} r={4} />
+      {/* Title */}
+      <SkBox w={250} h={40} r={10} />
+      {/* Event id + day badge row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <SkBox w={140} h={14} r={4} />
+        <SkBox w={6} h={6} r={9999} />
+        <SkBox w={100} h={28} r={9999} />
+      </div>
+    </div>
+
+    {/* Scanner card */}
+    <SkCard>
+      {/* Instruction */}
+      <SkBox w="70%" h={12} r={4} style={{ margin: '0 auto 20px' }} />
+
+      {/* QR scanner viewport placeholder */}
+      <SkBox w="100%" h={260} r={12} style={{ marginBottom: 24 }} />
+
+      {/* OR divider */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.04)' }} />
+        <SkBox w={28} h={11} r={4} />
+        <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.04)' }} />
+      </div>
+
+      {/* Manual ID input + button */}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <SkBox w="100%" h={42} r={10} />
+        <SkBox w={80} h={42} r={10} style={{ flexShrink: 0 }} />
+      </div>
+    </SkCard>
+  </div>
+);
+
+
 import { StatusBadge } from '@/components/StatusBadge';
 import { AlertCircle, ScanLine, RefreshCw, Users, CheckSquare, CalendarDays } from 'lucide-react';
 import '@/styles/eventra-shared.css';
@@ -144,11 +190,7 @@ export const ScanAttendance: React.FC = () => {
   const dayColor = currentDay === 1 ? '#4ADE80' : currentDay === 2 ? '#60A5FA' : '#F472B6';
 
   if (configLoading) {
-    return (
-      <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <LoadingSpinner text="Loading event configuration..." />
-      </div>
-    );
+    return <ScanSkeleton />;
   }
 
   return (
