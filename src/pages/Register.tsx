@@ -9,6 +9,100 @@ import { GlassCard } from '@/components/GlassCard';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { SkBox, SkCard } from '@/components/Skeleton';
+
+/* ── Register Skeleton ──────────────────────────────────────── */
+const RegisterSkeleton: React.FC = () => (
+  <div style={{ maxWidth: 780, margin: '0 auto', padding: '3rem 1.5rem', animation: 'ev-fade-up 0.35s ease forwards' }}>
+    {/* Event info card */}
+    <SkCard style={{ marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <SkBox w={90} h={22} r={9999} />
+          <SkBox w="60%" h={40} r={10} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <SkBox w="90%" h={11} r={4} />
+            <SkBox w="75%" h={11} r={4} />
+            <SkBox w="50%" h={11} r={4} />
+          </div>
+        </div>
+        <SkBox w={80} h={22} r={9999} />
+      </div>
+
+      {/* Divider */}
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '1rem 0' }} />
+
+      {/* Meta items */}
+      <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+        {[100, 120, 110].map((w, i) => (
+          <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <SkBox w={13} h={13} r={4} style={{ marginTop: 2, flexShrink: 0 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <SkBox w={60} h={9} r={3} />
+              <SkBox w={w} h={12} r={4} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </SkCard>
+
+    {/* Registration form card */}
+    <SkCard>
+      <SkBox w={180} h={28} r={8} style={{ marginBottom: 8 }} />
+      <SkBox w={260} h={11} r={4} style={{ marginBottom: 28 }} />
+
+      {/* Team info section label */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10, borderBottom: '1px solid rgba(198,169,105,0.08)', marginBottom: 20 }}>
+        <SkBox w={13} h={13} r={4} />
+        <SkBox w={130} h={10} r={4} />
+      </div>
+
+      {/* Team name */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+        <SkBox w={80} h={10} r={4} />
+        <SkBox w="100%" h={40} r={10} />
+      </div>
+
+      {/* Leader grid: 2 cols */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: 28 }}>
+        {[0, 1, 2, 3, 4].map(i => (
+          <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <SkBox w={90} h={10} r={4} />
+            <SkBox w="100%" h={40} r={10} />
+          </div>
+        ))}
+      </div>
+
+      {/* Members section label */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10, borderBottom: '1px solid rgba(198,169,105,0.08)', marginBottom: 20 }}>
+        <SkBox w={13} h={13} r={4} />
+        <SkBox w={160} h={10} r={4} />
+      </div>
+
+      {/* One member card */}
+      <div className="ev-card" style={{ padding: 20, marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+          <SkBox w={70} h={10} r={4} />
+          <SkBox w={18} h={18} r={5} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          {[0, 1, 2, 3].map(i => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <SkBox w={80} h={10} r={4} />
+              <SkBox w="100%" h={40} r={10} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Add member button + submit */}
+      <SkBox w={120} h={36} r={10} style={{ marginBottom: 20 }} />
+      <SkBox w="100%" h={48} r={10} />
+    </SkCard>
+  </div>
+);
+
+
 import type { EventDetails as EventDetailsType, EventSettings, MemberForm } from '@/types';
 import { Calendar, MapPin, Users, Plus, Trash2, UserPlus, CreditCard, AlertCircle } from 'lucide-react';
 import '@/styles/eventra-shared.css';
@@ -156,11 +250,7 @@ export const Register: React.FC = () => {
     setMembers(p => p.map((m, idx) => idx === i ? { ...m, [field]: value } : m));
 
   /* ── States ── */
-  if (loadingEvent) return (
-    <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <LoadingSpinner text="Loading event..." />
-    </div>
-  );
+  if (loadingEvent) return <RegisterSkeleton />;
 
   if (notFound) return (
     <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
