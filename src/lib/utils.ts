@@ -58,46 +58,150 @@ export const formatEmailForDb = (email: string): string => {
 };
 
 // ============================================================
-// CSV Export
+// CSV Export Helpers
 // ============================================================
 
-export function exportTeamsToCSV(teams: Array<{ id: string } & Team>, eventId: string): void {
-  const rows: string[][] = [
-    ['Team ID', 'Team Name', 'Leader', 'Email', 'Attendance', 'Members Count', 'Members', 'Registered At'],
-  ];
-
-  for (const team of teams) {
-    const memberNames = team.members.map((m) => m.name).join(' | ');
-    const attendanceStatus = team.attendanceMarked ? 'Present' : 'Absent';
-    const registeredAt = team.createdAt
-      ? new Date(team.createdAt).toLocaleString()
-      : 'N/A';
-
-    rows.push([
-      team.id,
-      team.teamName,
-      team.leader,
-      team.email ?? '',
-      attendanceStatus,
-      String(team.members.length),
-      memberNames,
-      registeredAt,
-    ]);
-  }
-
-  const csvContent = rows
-    .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(','))
-    .join('\n');
-
+/** Internal: triggers browser download of a CSV string */
+function triggerCSVDownload(csvContent: string, filename: string): void {
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${eventId}_teams_${new Date().toISOString().split('T')[0]}.csv`;
+  link.download = filename;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+/** Internal: converts a 2D string array to a CSV string with proper quoting */
+function rowsToCSV(rows: string[][]): string {
+  return rows
+    .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+}
+
+// ── 1. All Details ─────────────────────────────────────────────
+
+export function exportAllDetailsCSV(
+  teams: Array<{ id: string } & Team>,
+  eventId: string,
+  totalRounds: number,
+  totalDays: number,
+): void {
+  // Build header
+  const header = [
+    'Team ID', 'Team Name', 'Leader', 'Email',
+    'Members Count', 'Members', 'Member Roll Numbers', 'Member Colleges', 'Member Branches',
+    'Registered At',
+  ];
+  // Add round qualification columns
+  for (let r = 1; r <= totalRounds; r++) header.push(`Round ${r} Qualified`);
+  // Add day attendance columns
+  for (let d = 1; d <= totalDays; d++) header.push(`Day ${d} Present`);
+  // Position column
+  header.push('Final Position');
+
+  const rows: string[][] = [header];
+
+  for (const team of teams) {
+    const memberNames = team.members.map((m) => m.name).join(' | ');
+    const memberRolls = team.members.map((m) => m.rollNumber || '—').join(' | ');
+    const memberColleges = team.members.map((m) => m.college || '—').join(' | ');
+    const memberBranches = team.members.map((m) => m.branch || '—').join(' | ');
+    const registeredAt = team.createdAt ? new Date(team.createdAt).toLocaleString() : 'N/A';
+
+    const row = [
+      team.id, team.teamName, team.leader, team.email ?? '',
+      String(team.members.length), memberNames, memberRolls, memberColleges, memberBranches,
+      registeredAt,
+    ];
+
+    // Round qualifications
+    for (let r = 1; r <= totalRounds; r++) {
+      const q = team.qualifications?.[String(r)];
+      row.push(q === true ? 'Yes' : q === false ? 'No' : '—');
+    }
+
+    // Day attendance
+    for (let d = 1; d <= totalDays; d++) {
+      const da = team.dayAttendance?.[String(d)];
+      row.push(da?.marked ? 'Yes' : 'No');
+    }
+
+    // Position
+    const posLabels: Record<number, string> = { 1: '1st Place', 2: '2nd Place', 3: '3rd Place' };
+    row.push(team.position ? posLabels[team.position] ?? String(team.position) : '—');
+
+    rows.push(row);
+  }
+
+  triggerCSVDownload(rowsToCSV(rows), `${eventId}_all-details_${new Date().toISOString().split('T')[0]}.csv`);
+}
+
+// ── 2. Round Qualified Teams ───────────────────────────────────
+
+export function exportRoundQualifiedCSV(
+  teams: Array<{ id: string } & Team>,
+  eventId: string,
+  round: number,
+): void {
+  const qualified = teams.filter(t => t.qualifications?.[String(round)] === true);
+
+  const header = [
+    'Team ID', 'Team Name', 'Leader', 'Email',
+    'Members Count', 'Members', 'Registered At',
+  ];
+  const rows: string[][] = [header];
+
+  for (const team of qualified) {
+    const memberNames = team.members.map((m) => m.name).join(' | ');
+    const registeredAt = team.createdAt ? new Date(team.createdAt).toLocaleString() : 'N/A';
+
+    rows.push([
+      team.id, team.teamName, team.leader, team.email ?? '',
+      String(team.members.length), memberNames, registeredAt,
+    ]);
+  }
+
+  triggerCSVDownload(rowsToCSV(rows), `${eventId}_round-${round}-qualified_${new Date().toISOString().split('T')[0]}.csv`);
+}
+
+// ── 3. Day Attendance ──────────────────────────────────────────
+
+export function exportDayAttendanceCSV(
+  teams: Array<{ id: string } & Team>,
+  eventId: string,
+  day: number,
+): void {
+  const dayKey = String(day);
+  const present = teams.filter(t => t.dayAttendance?.[dayKey]?.marked);
+
+  const header = [
+    'Team ID', 'Team Name', 'Leader', 'Email',
+    'Members Count', 'Present Members', 'Absent Members', 'Marked At',
+  ];
+  const rows: string[][] = [header];
+
+  for (const team of present) {
+    const da = team.dayAttendance?.[dayKey];
+    const members = da?.members ?? team.members;
+    const presentMembers = members.filter(m => m.present).map(m => m.name).join(' | ') || '—';
+    const absentMembers = members.filter(m => !m.present).map(m => m.name).join(' | ') || '—';
+    const markedAt = da?.markedAt ? new Date(da.markedAt).toLocaleString() : 'N/A';
+
+    rows.push([
+      team.id, team.teamName, team.leader, team.email ?? '',
+      String(team.members.length), presentMembers, absentMembers, markedAt,
+    ]);
+  }
+
+  triggerCSVDownload(rowsToCSV(rows), `${eventId}_day-${day}-attendance_${new Date().toISOString().split('T')[0]}.csv`);
+}
+
+// Legacy wrapper — kept for backward compat
+export function exportTeamsToCSV(teams: Array<{ id: string } & Team>, eventId: string): void {
+  exportAllDetailsCSV(teams, eventId, 1, 1);
 }
 
 // ============================================================
