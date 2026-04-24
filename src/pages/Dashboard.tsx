@@ -4,7 +4,8 @@ import { ref, get, update } from 'firebase/database';
 import { db } from '@/lib/firebase';
 import { withRetry } from '@/lib/db-retry';
 import type { TeamWithId, EventDetails as EventDetailsType, DashboardStats } from '@/types';
-import { exportTeamsToCSV } from '@/lib/utils';
+import { exportAllDetailsCSV, exportRoundQualifiedCSV, exportDayAttendanceCSV } from '@/lib/utils';
+import { CSVDownloadModal, buildCSVOptions } from '@/components/CSVDownloadModal';
 import { useAuth } from '@/context/AuthContext';
 import { GlassCard } from '@/components/GlassCard';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -121,6 +122,7 @@ export const Dashboard: React.FC = () => {
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [linkCopied, setLinkCopied] = useState(false);
   const [lbCopied, setLbCopied] = useState(false);
+  const [csvModalOpen, setCSVModalOpen] = useState(false);
 
   // Day config (for attendance)
   const [currentDay, setCurrentDay] = useState(1);
@@ -354,7 +356,7 @@ export const Dashboard: React.FC = () => {
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           <button onClick={loadData} className="ev-btn ev-btn-ghost ev-btn-sm" style={{ gap: 6 }}><RefreshCw size={12} /> Refresh</button>
-          <button onClick={() => exportTeamsToCSV(teams, eventId!)} className="ev-btn ev-btn-ghost ev-btn-sm" style={{ gap: 6 }}><Download size={12} /> CSV</button>
+          <button onClick={() => setCSVModalOpen(true)} className="ev-btn ev-btn-ghost ev-btn-sm" style={{ gap: 6 }}><Download size={12} /> CSV</button>
           <Link to={`/scan/${eventId}`} style={{ textDecoration: 'none' }}>
             <button className="ev-btn ev-btn-primary ev-btn-sm" style={{ gap: 6 }}><ScanLine size={12} /> Scan QR</button>
           </Link>
@@ -905,6 +907,14 @@ export const Dashboard: React.FC = () => {
 
       {/* ── EMAIL BROADCAST TAB ──────────────────────────────────── */}
       {tab === 'email' && <EmailPanel teams={teams} />}
+
+      {/* ── CSV Download Modal ──────────────────────────────────── */}
+      <CSVDownloadModal
+        open={csvModalOpen}
+        onClose={() => setCSVModalOpen(false)}
+        options={buildCSVOptions(teams, eventId!, totalRounds, totalDays)}
+        eventName={eventDetails?.eventName}
+      />
     </div>
   );
 };
