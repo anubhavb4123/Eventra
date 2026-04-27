@@ -409,9 +409,9 @@ export const Dashboard: React.FC = () => {
       {/* ── Stats ───────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
         {[
-          { label: 'Total Teams',           value: stats.totalTeams,  icon: <Users size={18} />,     color: '#C6A969' },
-          { label: `Day ${currentDay} Present`, value: todayPresent,  icon: <CalendarDays size={18} />, color: dayColor },
-          { label: 'Total Members',          value: stats.totalMembers, icon: <Users size={18} />,    color: '#C6A969' },
+          { label: 'Total Teams', value: stats.totalTeams, icon: <Users size={18} />, color: '#C6A969' },
+          { label: `Day ${currentDay} Present`, value: todayPresent, icon: <CalendarDays size={18} />, color: dayColor },
+          { label: 'Total Members', value: stats.totalMembers, icon: <Users size={18} />, color: '#C6A969' },
           { label: `Round ${currentRound} Qualified`, value: qualifiedInRound(currentRound), icon: <Trophy size={18} />, color: '#818CF8' },
         ].map((s) => (
           <div key={s.label} className="ev-card ev-card-p-md" style={{ textAlign: 'left' }}>
@@ -610,7 +610,7 @@ export const Dashboard: React.FC = () => {
         </>
       )}
 
-      {/* ── QUALIFIED TEAMS TAB ──────────────────────────────────── */}
+      {/* QUALIFIED TEAMS TAB */}
       {tab === 'qualified' && (
         <div>
           {/* Round selector */}
