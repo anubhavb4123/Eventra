@@ -51,7 +51,7 @@ export const OrganizerLogin: React.FC = () => {
 
   const handleSwitchEvent = () => { logout(); };
 
-  /* ── Already logged in ──────────────────────────────────────── */
+  /* Already logged in */
   if (isAuthenticated && loggedEventId) {
     return (
       <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1.5rem' }}>
