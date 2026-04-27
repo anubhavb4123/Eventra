@@ -132,7 +132,7 @@ export const Leaderboard: React.FC = () => {
   const winner3 = teams.find(t => t.position === 3);
   const winnersDeclared = isLastRound && (winner1 || winner2 || winner3);
 
-  // ── Celebration Effect ──────────────────────────────────────
+  // Celebration Effect 
   const fireCelebration = () => {
     haptic.celebration();
     const duration = 5 * 1000;
@@ -143,7 +143,7 @@ export const Leaderboard: React.FC = () => {
       return Math.random() * (max - min) + min;
     }
 
-    const interval = setInterval(function() {
+    const interval = setInterval(function () {
       const timeLeft = animationEnd - Date.now();
 
       if (timeLeft <= 0) {
@@ -274,9 +274,9 @@ export const Leaderboard: React.FC = () => {
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.85rem', color: '#666', marginBottom: '2rem', maxWidth: 400, margin: '0 auto 2rem' }}>
             The final round has concluded. Tap the golden seal below to reveal the champions of {eventDetails?.eventName}.
           </p>
-          <Button 
-            variant="primary" 
-            size="lg" 
+          <Button
+            variant="primary"
+            size="lg"
             icon={<Trophy size={18} />}
             onClick={() => {
               setIsRevealed(true);
