@@ -170,7 +170,7 @@ export const Register: React.FC = () => {
       const h = Math.floor((dist % 86400000) / 3600000);
       const m = Math.floor((dist % 3600000) / 60000);
       const s = Math.floor((dist % 60000) / 1000);
-      setTimeLeft(`${d > 0 ? d + 'd ' : ''}${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`);
+      setTimeLeft(`${d > 0 ? d + 'd ' : ''}${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`);
     };
     update();
     const iv = setInterval(update, 1000);
@@ -303,7 +303,7 @@ export const Register: React.FC = () => {
         </div>
       </GlassCard>
 
-      {/* ── Registration Form / Closed ──────────────── */}
+      {/* Registration Form / Closed */}
       {!registrationClosed ? (
         <GlassCard>
           <h2 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.75rem', fontWeight: 700, color: '#eaeaea', marginBottom: '0.35rem' }}>
@@ -424,7 +424,7 @@ export const Register: React.FC = () => {
           <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.78rem', color: '#666' }}>
             {deadlinePassed ? 'The registration deadline has passed.' :
               (eventSettings?.maxTeams && (eventSettings.currentTeams ?? 0) >= eventSettings.maxTeams) ? 'The event has reached its maximum capacity.' :
-              'Registrations are currently paused by the organizer.'}
+                'Registrations are currently paused by the organizer.'}
           </p>
         </GlassCard>
       )}
