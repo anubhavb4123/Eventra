@@ -10,7 +10,7 @@ import { Button } from '@/components/Button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { SkBox, SkCard } from '@/components/Skeleton';
 
-/* ── EventDetails Skeleton ──────────────────────────────────── */
+/* EventDetails Skeleton */
 const EventDetailsSkeleton: React.FC = () => (
   <div style={{ maxWidth: 720, margin: '0 auto', padding: '3rem 1.5rem', animation: 'ev-fade-up 0.35s ease forwards' }}>
     {/* Header */}
