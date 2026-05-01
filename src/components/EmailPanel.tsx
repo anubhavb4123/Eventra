@@ -42,9 +42,13 @@ export const EmailPanel: React.FC<EmailPanelProps> = ({ teams }) => {
         await sendBroadcastEmail({
           subject,
           message,
-          to_email: team.email
+          to_email: team.email,
+          team_name: team.teamName,
+          team_id: team.id,
         });
         successCount++;
+        // Small delay to avoid rate limits
+        await new Promise(r => setTimeout(r, 200));
       } catch (err) {
         failCount++;
       }
@@ -56,7 +60,7 @@ export const EmailPanel: React.FC<EmailPanelProps> = ({ teams }) => {
       setSubject('');
       setMessage('');
     } else {
-      setStatus({ type: 'error', text: 'Failed to send broadcast. Check EmailJS configuration via .env.' });
+      setStatus({ type: 'error', text: 'Failed to send broadcast. Check backend API configuration.' });
     }
   };
 
