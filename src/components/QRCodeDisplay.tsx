@@ -17,7 +17,7 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
 }) => {
   const qrRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = React.useState(false);
-
+  
   const handleDownload = () => {
     const canvas = qrRef.current?.querySelector('canvas');
     if (!canvas) return;
