@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { ref, get } from 'firebase/database';
 import confetti from 'canvas-confetti';
@@ -77,10 +77,31 @@ export const Leaderboard: React.FC = () => {
   const [totalRounds, setTotalRounds] = useState(1);
   const [currentDay, setCurrentDay] = useState(1);
   const [totalDays, setTotalDays] = useState(1);
+  const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [highlightId, setHighlightId] = useState('');
   const [isRevealed, setIsRevealed] = useState(false);
+  const [showWasted, setShowWasted] = useState(false);
+  const [wastedTeam, setWastedTeam] = useState<TeamWithId | null>(null);
+  const [wastedRound, setWastedRound] = useState(0);
+  const lastWastedTerm = useRef('');
+
+  // Commit search: copy typed input into searchTerm to trigger filter + WASTED
+  const doSearch = () => {
+    setSearchTerm(searchInput.trim());
+  };
   const celebrationFired = useRef(false);
+
+  // ── WASTED sound effect ──
+  const playWastedSound = useCallback(() => {
+    try {
+      const audio = new Audio('/gta-v-death-sound-effect-102.mp3');
+      audio.volume = 1;
+      audio.play();
+    } catch {
+      // Audio playback not supported — silently skip
+    }
+  }, []);
 
   useEffect(() => {
     if (!eventId) return;
@@ -157,6 +178,64 @@ export const Leaderboard: React.FC = () => {
     }, 250);
   };
 
+  // ── Check for eliminated teams on search (WASTED effect) ──
+  useEffect(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term || term === lastWastedTerm.current || currentRound <= 1) return;
+
+    // Find teams that match the search
+    const matchingTeams = teams.filter(t =>
+      t.teamName.toLowerCase().includes(term) ||
+      t.id.toLowerCase().includes(term) ||
+      t.leader.toLowerCase().includes(term)
+    );
+
+    // Check if ANY matching team is eliminated (registered but not qualified for current round)
+    const eliminatedTeam = matchingTeams.find(t => {
+      // Skip if they have a position (winners)
+      if (t.position) return false;
+      // Check if explicitly eliminated in any round
+      for (let r = currentRound - 1; r >= 1; r--) {
+        if (t.qualifications?.[String(r)] === false) return true;
+      }
+      // Registered but never qualified for anything beyond round 1
+      if (currentRound > 1 && !t.qualifications?.['1']) return true;
+      return false;
+    });
+
+    if (eliminatedTeam) {
+      lastWastedTerm.current = term;
+      // Find which round they were eliminated in
+      let elimRound = 0;
+      for (let r = 1; r < currentRound; r++) {
+        if (eliminatedTeam.qualifications?.[String(r)] === false) {
+          elimRound = r;
+          break;
+        }
+      }
+      setWastedTeam(eliminatedTeam);
+      setWastedRound(elimRound);
+      setShowWasted(true);
+      // Fire haptic + sound
+      haptic.wasted();
+      playWastedSound();
+    }
+  }, [searchTerm, teams, currentRound]);
+
+  // Reset wasted tracking when search is cleared
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      lastWastedTerm.current = '';
+    }
+  }, [searchTerm]);
+
+  // When searchInput is fully cleared, also clear the committed search
+  useEffect(() => {
+    if (!searchInput.trim()) {
+      setSearchTerm('');
+    }
+  }, [searchInput]);
+
   // Filter
   const filtered = teams.filter(t => {
     const term = searchTerm.trim().toLowerCase();
@@ -218,6 +297,27 @@ export const Leaderboard: React.FC = () => {
   }
 
   return (
+    <>
+      {/* ── GTA WASTED Overlay ────────────────────────────────── */}
+      {showWasted && (
+        <div
+          className="ev-wasted-overlay"
+          key={`wasted-${Date.now()}`}
+          onClick={() => setShowWasted(false)}
+          onTouchStart={() => setShowWasted(false)}
+        >
+          <div className="ev-wasted-blood-vignette" />
+          <div className="ev-wasted-text">WASTED</div>
+          <div className="ev-wasted-line" />
+          <div className="ev-wasted-sub">
+            <span className="ev-wasted-team-name">{wastedTeam?.teamName}</span>
+            {wastedRound > 0
+              ? <> — Eliminated in Round {wastedRound}</>
+              : <> — Did not qualify</>}
+          </div>
+          <div className="ev-wasted-dismiss">Tap anywhere to continue</div>
+        </div>
+      )}
     <div style={{ maxWidth: 780, margin: '0 auto', padding: '3rem 1.5rem' }}>
 
       {/* ── Header ──────────────────────────────────────────────── */}
@@ -354,16 +454,37 @@ export const Leaderboard: React.FC = () => {
       </div>
 
       {/* ── Team Search ──────────────────────────────────────────── */}
-      <div style={{ marginBottom: '1rem', position: 'relative' }}>
-        <Search size={14} color="#444" style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', zIndex: 1 }} />
-        <input
-          id="leaderboard-search"
-          className="ev-input"
-          style={{ paddingLeft: 38 }}
-          placeholder="Search by Team ID, team name, or leader…"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      <div style={{ marginBottom: '1rem', display: 'flex', gap: 8, alignItems: 'stretch' }}>
+        <div style={{ position: 'relative', flex: 1 }}>
+          <Search size={14} color="#444" style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', zIndex: 1 }} />
+          <input
+            id="leaderboard-search"
+            className="ev-input"
+            style={{ paddingLeft: 38 }}
+            placeholder="Search by Team ID, team name, or leader…"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') doSearch(); }}
+          />
+        </div>
+        <button
+          id="leaderboard-search-btn"
+          onClick={doSearch}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '0 20px', borderRadius: 10, border: 'none', cursor: 'pointer',
+            background: 'linear-gradient(135deg, #C6A969, #D4AF37)',
+            color: '#0a0a0f', fontFamily: "'JetBrains Mono', monospace",
+            fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.04em',
+            transition: 'opacity 0.2s, transform 0.15s, box-shadow 0.2s',
+            boxShadow: '0 4px 16px rgba(198,169,105,0.2)',
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(198,169,105,0.35)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(198,169,105,0.2)'; }}
+        >
+          <Search size={14} /> Search
+        </button>
       </div>
 
       {/* Quick-find by exact ID */}
@@ -504,5 +625,6 @@ export const Leaderboard: React.FC = () => {
         </p>
       </div>
     </div>
+    </>
   );
 };
