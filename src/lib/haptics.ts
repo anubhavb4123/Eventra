@@ -39,5 +39,11 @@ export const haptic = {
       // Multiple strong pulses to match the confetti bursts
       navigator.vibrate([60, 40, 60, 40, 100]);
     }
+  },
+  wasted: () => {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      // Heavy slam then fading throbs — matches the GTA screen shake
+      navigator.vibrate([120, 60, 80, 80, 60, 100, 40, 120, 30]);
+    }
   }
 };
