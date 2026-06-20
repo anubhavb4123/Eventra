@@ -3,7 +3,8 @@
 // ============================================================
 
 /** The static secret key required to create new events. */
-export const APPROVAL_KEY = 'EVENTRA-2026-APPROVE';
+export const APPROVAL_KEY = import.meta.env.VITE_APPROVAL_KEY || '';
+
 
 /** App metadata */
 export const APP_NAME = 'Eventra';
