@@ -6,7 +6,6 @@ import { withRetry } from '@/lib/db-retry';
 import { GlassCard } from '@/components/GlassCard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Home } from 'lucide-react';
-import { sendRegistrationEmail } from '@/lib/email';
 import { TicketCard } from '@/components/TicketCard';
 import type { TeamWithId, EventDetails as EventDetailsType } from '@/types';
 import '@/styles/eventra-shared.css';
@@ -34,15 +33,6 @@ export const RegistrationSuccess: React.FC = () => {
           setTeamName(tData.teamName);
           setTeam({ id: teamCode, ...tData });
           setEventDetails(dData);
-          if (tData.email && !tData.emailSent) {
-            try {
-              await withRetry(() => update(ref(db, `events/${eventId}/teams/${teamCode}`), { emailSent: true }));
-              await sendRegistrationEmail({
-                team_name: tData.teamName, team_id: teamId, event_name: dData.eventName,
-                ticket_link: `${window.location.origin}/ticket/${eventId}/${teamId}`, to_email: tData.email
-              });
-            } catch (err) { console.error('Auto-email failure:', err); }
-          }
         }
       } catch (e) {
         console.error('Load Registration Success Error:', e);

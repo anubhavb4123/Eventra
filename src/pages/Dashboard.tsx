@@ -94,16 +94,17 @@ const DashboardSkeleton: React.FC = () => (
 
 
 import { QRCodeDisplay } from '@/components/QRCodeDisplay';
-import { EmailPanel } from '@/components/EmailPanel';
+import { NotificationPanel } from '@/components/NotificationPanel';
 import {
   Users, UserCheck, RefreshCw, Download, ScanLine, Search,
   ChevronDown, ChevronUp, Settings, AlertCircle, Copy,
   CheckCheck, LinkIcon, LogOut, Lock, Mail, CalendarDays,
-  Trophy, Star, StarOff, ChevronLeft, ChevronRight,
+  Trophy, Star, StarOff, ChevronLeft, ChevronRight, BellRing,
 } from 'lucide-react';
+import { haptic } from '@/lib/haptics';
 import '@/styles/eventra-shared.css';
 
-type DashboardTab = 'teams' | 'qualified' | 'lookup' | 'email';
+type DashboardTab = 'teams' | 'qualified' | 'lookup' | 'notifications';
 
 export const Dashboard: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -469,8 +470,8 @@ export const Dashboard: React.FC = () => {
         <button className={`ev-tab${tab === 'lookup' ? ' active' : ''}`} onClick={() => setTab('lookup')}>
           <Search size={13} /> Lookup
         </button>
-        <button className={`ev-tab${tab === 'email' ? ' active' : ''}`} onClick={() => setTab('email')}>
-          <Mail size={13} /> Broadcast
+        <button className={`ev-tab${tab === 'notifications' ? ' active' : ''}`} onClick={() => setTab('notifications')}>
+          <BellRing size={13} /> Push Broadcast
         </button>
       </div>
 
@@ -502,7 +503,14 @@ export const Dashboard: React.FC = () => {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', cursor: 'pointer' }}
                       onClick={() => setExpandedTeam(isExpanded ? null : team.id)}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p className="ev-section-label" style={{ marginBottom: 3 }}>{team.id}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                          <p className="ev-section-label" style={{ margin: 0 }}>{team.id}</p>
+                          {team.fcmToken && (
+                            <span title="Push Notifications Active" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '1px 6px', borderRadius: 4, background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.25)', color: '#4ADE80', fontSize: '0.6rem', fontFamily: "'JetBrains Mono', monospace" }}>
+                              <BellRing size={9} /> Push Active
+                            </span>
+                          )}
+                        </div>
                         <p style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: '1.15rem', fontWeight: 700, color: '#eaeaea', margin: 0 }}>{team.teamName}</p>
                         <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.72rem', color: '#555', margin: '3px 0 0' }}>
                           Led by {team.leader} · {team.members.length} member{team.members.length !== 1 ? 's' : ''}
@@ -598,6 +606,28 @@ export const Dashboard: React.FC = () => {
                             </div>
                           ))}
                         </div>
+                        {team.fcmToken && (
+                          <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                              <BellRing size={13} color="#4ADE80" style={{ flexShrink: 0 }} />
+                              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem', color: '#4ADE80', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                FCM Token: {team.fcmToken.slice(0, 24)}...
+                              </span>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(team.fcmToken!);
+                                haptic.light();
+                              }}
+                              className="ev-btn ev-btn-ghost ev-btn-sm"
+                              style={{ padding: '3px 8px', fontSize: '0.66rem', gap: 4, height: 'auto' }}
+                              title="Copy FCM Registration Token for Firebase Console testing"
+                            >
+                              <Copy size={11} /> Copy Token
+                            </button>
+                          </div>
+                        )}
                         {team.email && <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem', color: '#444', marginTop: 10, marginBottom: 0 }}>📧 {team.email}</p>}
                         {team.createdAt && <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem', color: '#444', marginTop: 4, marginBottom: 0 }}>🕒 Registered: {new Date(team.createdAt).toLocaleString()}</p>}
                       </div>
@@ -905,8 +935,14 @@ export const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* ── EMAIL BROADCAST TAB ──────────────────────────────────── */}
-      {tab === 'email' && <EmailPanel teams={teams} />}
+      {/* ── PUSH NOTIFICATION BROADCAST TAB ─────────────────────── */}
+      {tab === 'notifications' && (
+        <NotificationPanel
+          eventId={eventId!}
+          eventName={eventDetails?.eventName}
+          teams={teams}
+        />
+      )}
 
       {/* ── CSV Download Modal ──────────────────────────────────── */}
       <CSVDownloadModal

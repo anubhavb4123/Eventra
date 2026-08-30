@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from './Navbar';
+import { NotificationPrompt } from './NotificationPrompt';
 import '@/styles/eventra-shared.css';
 
 export const Layout: React.FC = () => {
@@ -12,6 +13,7 @@ export const Layout: React.FC = () => {
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0f', position: 'relative', overflowX: 'hidden' }}>
       <Navbar />
+      <NotificationPrompt />
 
       {/* Ambient background glows */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>

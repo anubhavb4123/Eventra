@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { NotificationPrompt } from "@/components/NotificationPrompt";
 
 export const Home: React.FC = () => {
   const sendPrompt = (msg: string) => {
@@ -1128,6 +1129,7 @@ export const Home: React.FC = () => {
           </div>
         </footer>
       </div>
+      <NotificationPrompt />
     </>
   );
 };

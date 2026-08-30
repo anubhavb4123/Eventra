@@ -74,14 +74,50 @@ export interface Team {
   /** Per-day attendance records keyed by day number (as string) */
   dayAttendance?: Record<string, DayAttendance>;
   /**
+  /**
    * Final position assigned in the last round: 1 = 1st place, 2 = 2nd, 3 = 3rd.
    * Only set during the last round view on the Qualified tab.
    */
   position?: number;
+  /** FCM registration token associated with this team */
+  fcmToken?: string;
+  /** Timestamp when the FCM token was registered/updated */
+  fcmTokenUpdatedAt?: number;
 }
 
 export interface TeamWithId extends Team {
   id: string;
+}
+
+// ============================================================
+// FCM / Notification Types
+// ============================================================
+
+export interface VisitorFcmToken {
+  token: string;
+  createdAt: number | object;
+  updatedAt: number | object;
+  userAgent?: string;
+  platform?: string;
+  language?: string;
+}
+
+export interface TeamFcmToken {
+  token: string;
+  teamId: string;
+  teamName: string;
+  leader: string;
+  email?: string;
+  eventId: string;
+  updatedAt: number | object;
+}
+
+export interface PushNotificationPayload {
+  title: string;
+  body: string;
+  icon?: string;
+  url?: string;
+  data?: Record<string, string>;
 }
 
 // ============================================================

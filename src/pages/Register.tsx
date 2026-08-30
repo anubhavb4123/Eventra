@@ -104,7 +104,8 @@ const RegisterSkeleton: React.FC = () => (
 
 
 import type { EventDetails as EventDetailsType, EventSettings, MemberForm } from '@/types';
-import { Calendar, MapPin, Users, Plus, Trash2, UserPlus, CreditCard, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, Users, Plus, Trash2, UserPlus, CreditCard, AlertCircle, BellRing } from 'lucide-react';
+import { requestPermissionAndGetToken, associateTokenWithTeam } from '@/lib/fcm';
 import '@/styles/eventra-shared.css';
 
 interface LocalMemberForm extends MemberForm {
@@ -131,6 +132,7 @@ export const Register: React.FC = () => {
   const [leaderRoll, setLeaderRoll] = useState('');
   const [leaderCollege, setLeaderCollege] = useState('');
   const [leaderBranch, setLeaderBranch] = useState('');
+  const [notifyOptIn, setNotifyOptIn] = useState(true);
   const [members, setMembers] = useState<LocalMemberForm[]>([emptyMember()]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -216,6 +218,18 @@ export const Register: React.FC = () => {
       const newCount = result.snapshot.val();
       const teamId = generateTeamId(eventId, newCount);
       const teamCode = teamId.split('-').pop() || teamId;
+
+      // Handle FCM Push Notification opt-in
+      let fcmToken: string | null = null;
+      if (notifyOptIn) {
+        try {
+          const tokenRes = await requestPermissionAndGetToken();
+          fcmToken = tokenRes.token;
+        } catch (fcmErr) {
+          console.warn('[FCM] Push token retrieval during registration skipped/failed:', fcmErr);
+        }
+      }
+
       const allMembers = [
         { name: leader, rollNumber: leaderRoll, college: leaderCollege, branch: leaderBranch, present: false },
         ...members.map((m) => ({
@@ -227,13 +241,37 @@ export const Register: React.FC = () => {
         })),
       ];
       const updates: any = {};
-      updates[`events/${eventId}/teams/${teamCode}`] = { teamId, teamName, leader, email: email || null, members: allMembers, attendanceMarked: false, createdAt: serverTimestamp() };
+      updates[`events/${eventId}/teams/${teamCode}`] = {
+        teamId,
+        teamName,
+        leader,
+        email: email || null,
+        members: allMembers,
+        attendanceMarked: false,
+        createdAt: serverTimestamp(),
+        ...(fcmToken ? { fcmToken, fcmTokenUpdatedAt: serverTimestamp() } : {}),
+      };
       if (email) { const emailKey = email.toLowerCase().replace(/\./g, ','); updates[`events/${eventId}/registeredEmails/${emailKey}`] = true; }
       await Object.keys(updates).reduce(async (promise, path) => {
         await promise;
         const keys = path.split('/'); const prop = keys.pop()!; const base = keys.join('/');
         return withRetry(() => set(ref(db, `${base}/${prop}`), updates[path]));
       }, Promise.resolve());
+
+      // If FCM token was generated, associate it with team in fcmTokens/teams node
+      if (fcmToken) {
+        try {
+          await associateTokenWithTeam(eventId, teamCode, fcmToken, {
+            teamId,
+            teamName,
+            leader,
+            email: email || undefined,
+          });
+        } catch (assocErr) {
+          console.warn('[FCM] Associate token with team error:', assocErr);
+        }
+      }
+
       haptic.success();
       navigate(`/registration-success/${eventId}/${teamId}`);
     } catch (err) {
@@ -402,6 +440,65 @@ export const Register: React.FC = () => {
                 <Plus size={14} /> Add Member
               </button>
             )}
+
+            {/* Notification Opt-In Toggle */}
+            <div
+              style={{
+                background: 'rgba(198,169,105,0.06)',
+                border: '1px solid rgba(198,169,105,0.22)',
+                borderRadius: 12,
+                padding: '14px 16px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background: 'rgba(198,169,105,0.12)',
+                  border: '1px solid rgba(198,169,105,0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  marginTop: 2,
+                }}
+              >
+                <BellRing size={16} color="#C6A969" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <label
+                    htmlFor="notifyOptIn"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontSize: '0.95rem',
+                      fontWeight: 700,
+                      color: '#eaeaea',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Enable Real-time Push Notifications
+                  </label>
+                  <input
+                    type="checkbox"
+                    id="notifyOptIn"
+                    checked={notifyOptIn}
+                    onChange={(e) => {
+                      haptic.light();
+                      setNotifyOptIn(e.target.checked);
+                    }}
+                    className="ev-checkbox"
+                  />
+                </div>
+                <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.74rem', color: '#888', margin: 0, lineHeight: 1.5 }}>
+                  Receive instant browser push alerts for qualification rounds, schedule updates, and organizer announcements.
+                </p>
+              </div>
+            </div>
 
             {errors.submit && (
               <div className="ev-alert ev-alert-error">
