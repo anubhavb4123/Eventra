@@ -1,0 +1,20 @@
+{
+  "name": "eventra-notification-server",
+  "version": "1.0.0",
+  "description": "Eventra scheduled push notification server — Render deployment",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "firebase-admin": "^13.0.2",
+    "node-cron": "^3.0.3",
+    "dotenv": "^16.4.7",
+    "cors": "^2.8.5"
+  }
+}
