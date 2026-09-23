@@ -10,7 +10,8 @@
 // Automatically cleans up stale/invalid tokens from RTDB.
 // ============================================================
 
-const { db, messaging } = require('./firebase');
+const { messaging } = require('./firebase');
+const { supabase } = require('./supabase');
 
 // In-memory stats for health endpoint reporting
 const stats = {
@@ -90,15 +91,14 @@ async function sendToToken(token, payload) {
 }
 
 /**
- * Remove a stale team token from RTDB.
+ * Remove a stale team token from Supabase.
  */
 async function cleanTeamToken(eventId, teamCode) {
   try {
-    await db.ref(`fcmTokens/teams/${eventId}/${teamCode}`).remove();
-    await db.ref(`events/${eventId}/teams/${teamCode}/fcmToken`).remove();
-    await db.ref(`events/${eventId}/teams/${teamCode}/fcmTokenUpdatedAt`).remove();
+    await supabase.from('fcm_team_tokens').delete().eq('event_id', eventId).eq('team_code', teamCode);
+    await supabase.from('teams').update({ fcm_token: null, fcm_token_updated_at: null }).eq('event_id', eventId).eq('team_code', teamCode);
     stats.totalCleaned++;
-    console.log(`[Notify] Cleaned stale team token: ${eventId}/${teamCode}`);
+    console.log(`[Notify] Cleaned stale team token in Supabase: ${eventId}/${teamCode}`);
   } catch (err) {
     console.error(`[Notify] Failed to clean team token:`, err.message);
   }
@@ -106,25 +106,27 @@ async function cleanTeamToken(eventId, teamCode) {
 
 /**
  * Send a push notification to ALL registered teams of a specific event.
- * Reads from `fcmTokens/teams/{eventId}/`.
  */
 async function sendToEventTeams(eventId, payload) {
   const result = { sent: 0, failed: 0, cleaned: 0 };
   if (!eventId) return result;
 
   try {
-    const snap = await db.ref(`fcmTokens/teams/${eventId}`).once('value');
-    if (!snap.exists()) {
-      console.log(`[Notify] No team tokens found for event: ${eventId}`);
+    const { data: teamTokens, error } = await supabase
+      .from('fcm_team_tokens')
+      .select('token, team_code')
+      .eq('event_id', eventId);
+
+    if (error) throw error;
+    if (!teamTokens || teamTokens.length === 0) {
+      console.log(`[Notify] No team tokens found in Supabase for event: ${eventId}`);
       return result;
     }
 
-    const teams = snap.val();
-    const entries = Object.entries(teams);
-    console.log(`[Notify] Sending to ${entries.length} registered team(s) for event ${eventId}...`);
+    console.log(`[Notify] Sending to ${teamTokens.length} registered team(s) for event ${eventId}...`);
 
-    for (const [teamCode, data] of entries) {
-      const token = data?.token;
+    for (const item of teamTokens) {
+      const token = item.token;
       if (!token) continue;
 
       const res = await sendToToken(token, payload);
@@ -133,7 +135,7 @@ async function sendToEventTeams(eventId, payload) {
       } else {
         result.failed++;
         if (res.isInvalidToken) {
-          await cleanTeamToken(eventId, teamCode);
+          await cleanTeamToken(eventId, item.team_code);
           result.cleaned++;
         }
       }
@@ -152,13 +154,18 @@ async function sendToSpecificTeams(eventId, teamCodes, payload) {
   const result = { sent: 0, failed: 0, cleaned: 0 };
   if (!eventId || !teamCodes?.length) return result;
 
-  for (const teamCode of teamCodes) {
-    try {
-      const snap = await db.ref(`fcmTokens/teams/${eventId}/${teamCode}`).once('value');
-      if (!snap.exists()) continue;
+  try {
+    const { data: teamTokens, error } = await supabase
+      .from('fcm_team_tokens')
+      .select('token, team_code')
+      .eq('event_id', eventId)
+      .in('team_code', teamCodes);
 
-      const data = snap.val();
-      const token = data?.token;
+    if (error) throw error;
+    if (!teamTokens || teamTokens.length === 0) return result;
+
+    for (const item of teamTokens) {
+      const token = item.token;
       if (!token) continue;
 
       const res = await sendToToken(token, payload);
@@ -167,13 +174,13 @@ async function sendToSpecificTeams(eventId, teamCodes, payload) {
       } else {
         result.failed++;
         if (res.isInvalidToken) {
-          await cleanTeamToken(eventId, teamCode);
+          await cleanTeamToken(eventId, item.team_code);
           result.cleaned++;
         }
       }
-    } catch (err) {
-      console.error(`[Notify] Error sending to team ${teamCode}:`, err.message);
     }
+  } catch (err) {
+    console.error(`[Notify] Error sending to specific teams:`, err.message);
   }
 
   return result;
@@ -187,24 +194,24 @@ async function sendToQualifiedTeams(eventId, round, payload) {
   if (!eventId || !round) return result;
 
   try {
-    const teamsSnap = await db.ref(`events/${eventId}/teams`).once('value');
-    if (!teamsSnap.exists()) return result;
+    const { data: teams, error } = await supabase
+      .from('teams')
+      .select('team_code, qualifications')
+      .eq('event_id', eventId);
 
-    const teams = teamsSnap.val();
-    const qualifiedTeamCodes = [];
+    if (error) throw error;
 
-    for (const [teamCode, teamData] of Object.entries(teams)) {
-      if (teamData?.qualifications?.[String(round)] === true) {
-        qualifiedTeamCodes.push(teamCode);
-      }
-    }
+    const roundKey = String(round);
+    const qualifiedCodes = (teams || [])
+      .filter(t => t.qualifications?.[roundKey] === true)
+      .map(t => t.team_code);
 
-    if (qualifiedTeamCodes.length === 0) {
+    if (qualifiedCodes.length === 0) {
       console.log(`[Notify] No teams qualified for round ${round} in event ${eventId}`);
       return result;
     }
 
-    return await sendToSpecificTeams(eventId, qualifiedTeamCodes, payload);
+    return await sendToSpecificTeams(eventId, qualifiedCodes, payload);
   } catch (err) {
     console.error(`[Notify] Error sending to round ${round} qualified teams:`, err.message);
     return result;
@@ -219,24 +226,22 @@ async function sendToWinnerTeams(eventId, payload) {
   if (!eventId) return result;
 
   try {
-    const teamsSnap = await db.ref(`events/${eventId}/teams`).once('value');
-    if (!teamsSnap.exists()) return result;
+    const { data: teams, error } = await supabase
+      .from('teams')
+      .select('team_code, position')
+      .eq('event_id', eventId)
+      .not('position', 'is', null)
+      .gt('position', 0);
 
-    const teams = teamsSnap.val();
-    const winnerTeamCodes = [];
+    if (error) throw error;
 
-    for (const [teamCode, teamData] of Object.entries(teams)) {
-      if (teamData?.position && teamData.position > 0) {
-        winnerTeamCodes.push(teamCode);
-      }
-    }
-
-    if (winnerTeamCodes.length === 0) {
+    const winnerCodes = (teams || []).map(t => t.team_code);
+    if (winnerCodes.length === 0) {
       console.log(`[Notify] No winner teams found for event ${eventId}`);
       return result;
     }
 
-    return await sendToSpecificTeams(eventId, winnerTeamCodes, payload);
+    return await sendToSpecificTeams(eventId, winnerCodes, payload);
   } catch (err) {
     console.error(`[Notify] Error sending to winner teams:`, err.message);
     return result;

@@ -9,7 +9,7 @@
 // Exclusively notifies registered teams of the event (no visitors).
 // ============================================================
 
-const { db } = require('../lib/firebase');
+const { supabase } = require('../lib/supabase');
 const { sendToEventTeams } = require('../lib/notifications');
 const { hasBeenSent, markAsSent } = require('../lib/dedup');
 
@@ -21,20 +21,25 @@ const WINDOW_MS = 2 * 60 * 1000;
  */
 async function run() {
   try {
-    const eventsSnap = await db.ref('events').once('value');
-    if (!eventsSnap.exists()) return;
+    const { data: events, error } = await supabase
+      .from('events')
+      .select('id, event_name, registration_open, registration_deadline')
+      .eq('registration_open', true)
+      .not('registration_deadline', 'is', null);
 
-    const events = eventsSnap.val();
+    if (error) {
+      console.error('[Reminder] Error fetching events from Supabase:', error.message);
+      return;
+    }
+
+    if (!events || events.length === 0) return;
+
     const now = Date.now();
 
-    for (const [eventId, eventData] of Object.entries(events)) {
-      const settings = eventData.eventSettings || {};
-      const details = eventData.details || {};
-      const eventName = details.eventName || eventId;
-
-      if (settings.registrationOpen === false) continue;
-
-      const deadline = settings.registrationDeadline;
+    for (const event of events) {
+      const eventId = event.id;
+      const eventName = event.event_name || eventId;
+      const deadline = event.registration_deadline;
       if (!deadline) continue;
 
       const deadlineMs = new Date(deadline).getTime();

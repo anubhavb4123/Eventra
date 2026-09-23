@@ -93,14 +93,22 @@ app.get('/status', (_req, res) => {
 // ── Debug Endpoint ───────────────────────────────────────────
 app.get('/debug', async (_req, res) => {
   let dbConnected = false;
+  let supabaseConnected = false;
+  try {
+    const { supabase } = require('./lib/supabase');
+    const { error } = await supabase.from('events').select('id').limit(1);
+    supabaseConnected = !error;
+  } catch (_) { /* ignore */ }
+
   try {
     const testSnap = await db.ref('.info/connected').once('value');
     dbConnected = testSnap.val() === true;
   } catch (_) { /* ignore */ }
 
   res.json({
+    supabase_configured: !!process.env.SUPABASE_URL,
+    supabase_connected: supabaseConnected,
     firebase_service_account_set: !!process.env.FIREBASE_SERVICE_ACCOUNT || !!process.env.GOOGLE_APPLICATION_CREDENTIALS,
-    firebase_database_url: process.env.FIREBASE_DATABASE_URL || 'DEFAULT',
     database_connected: dbConnected,
     port: PORT,
     node_version: process.version,

@@ -9,7 +9,7 @@
 // Exclusively notifies registered teams of the event (no visitors).
 // ============================================================
 
-const { db } = require('../lib/firebase');
+const { supabase } = require('../lib/supabase');
 const { sendToEventTeams } = require('../lib/notifications');
 const { hasBeenSent, markAsSent, clearForEvent } = require('../lib/dedup');
 
@@ -21,19 +21,24 @@ const stateCache = {};
  */
 async function run() {
   try {
-    const eventsSnap = await db.ref('events').once('value');
-    if (!eventsSnap.exists()) return;
+    const { data: events, error } = await supabase
+      .from('events')
+      .select('id, event_name, registration_open, registration_deadline');
 
-    const events = eventsSnap.val();
+    if (error) {
+      console.error('[Status] Error fetching events from Supabase:', error.message);
+      return;
+    }
+
+    if (!events || events.length === 0) return;
+
     const now = Date.now();
 
-    for (const [eventId, eventData] of Object.entries(events)) {
-      const settings = eventData.eventSettings || {};
-      const details = eventData.details || {};
-      const eventName = details.eventName || eventId;
-
-      const currentOpen = settings.registrationOpen !== false;
-      const currentDeadline = settings.registrationDeadline || null;
+    for (const event of events) {
+      const eventId = event.id;
+      const eventName = event.event_name || eventId;
+      const currentOpen = event.registration_open !== false;
+      const currentDeadline = event.registration_deadline || null;
 
       const prev = stateCache[eventId];
 
