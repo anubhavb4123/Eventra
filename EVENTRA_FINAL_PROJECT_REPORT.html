@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Eventra — Final Year Project Report</title>
+  <style>
+    /* =========================================================
+       ACADEMIC REPORT STYLESHEET (B.Tech Final Year Guidelines)
+       Size: A4 | Font: Times New Roman | 1.5 Spacing | Justified
+       ========================================================= */
+
+    @page {
+      size: A4 portrait;
+      margin: 20mm 15mm 20mm 20mm; /* Standard academic margins: Left 25mm, Right 20mm, Top 25mm, Bottom 25mm */
+      @bottom-center {
+        content: counter(page);
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 10pt;
+        color: #555;
+      }
+    }
+
+    @page :first {
+      margin: 20mm;
+      @bottom-center { content: ""; }
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      font-family: 'Times New Roman', Times, Georgia, serif;
+      font-size: 11pt;
+      line-height: 1.39;
+      color: #111;
+      background: #fff;
+      margin: 0;
+      padding: 0;
+      text-align: justify;
+      text-justify: inter-word;
+    }
+
+    /* Page Breaks */
+    .page-break {
+      page-break-before: always !important;
+      break-before: page !important;
+      height: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Avoid breaks inside critical blocks */
+    table, tr, td, th, pre, blockquote, .mermaid-container, .no-break {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Times New Roman', Times, Georgia, serif;
+      font-weight: bold;
+      color: #000;
+      page-break-after: avoid !important;
+      break-after: avoid !important;
+      margin-top: 1.0em;
+      margin-bottom: 0.6em;
+      text-align: left;
+    }
+
+    /* Headings Sizing */
+    h1 {
+      font-size: 18pt;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1.5pt solid #222;
+      padding-bottom: 4pt;
+      margin-top: 1.8em;
+    }
+
+    .chapter-heading {
+      font-size: 20pt;
+      text-align: center;
+      margin-top: 2em;
+      margin-bottom: 1.2em;
+      border-bottom: 2pt solid #000;
+      padding-bottom: 8pt;
+    }
+
+    h2 {
+      font-size: 15pt;
+      border-bottom: 0.5pt solid #888;
+      padding-bottom: 2pt;
+      margin-top: 1.3em;
+    }
+
+    h3 {
+      font-size: 13pt;
+      margin-top: 1.1em;
+    }
+
+    h4 {
+      font-size: 11pt;
+      font-style: italic;
+    }
+
+    p {
+      margin-top: 0;
+      margin-bottom: 0.48em;
+      text-indent: 0;
+    }
+
+    strong, b {
+      font-weight: bold;
+    }
+
+    em, i {
+      font-style: italic;
+    }
+
+    ul, ol {
+      margin-top: 0;
+      margin-bottom: 1em;
+      padding-left: 2em;
+    }
+
+    li {
+      margin-bottom: 0.4em;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5em 0;
+      font-size: 10pt;
+      line-height: 1.4;
+      text-align: left;
+    }
+
+    th, td {
+      border: 1pt solid #444;
+      padding: 4pt 6pt;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #f0f2f5;
+      font-weight: bold;
+      color: #000;
+      text-align: center;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #fafbfc;
+    }
+
+    /* Code Blocks */
+    pre {
+      background-color: #f6f8fa;
+      border: 1pt solid #d0d7de;
+      border-radius: 4pt;
+      padding: 6pt 8pt;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 9pt;
+      line-height: 1.45;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin: 1.2em 0;
+    }
+
+    code {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 9.5pt;
+      background-color: #f3f4f6;
+      padding: 1pt 3pt;
+      border-radius: 2pt;
+      border: 0.5pt solid #e5e7eb;
+    }
+
+    pre code {
+      background-color: transparent;
+      padding: 0;
+      border: none;
+      font-size: 9pt;
+    }
+
+    /* Mermaid Diagrams */
+    .mermaid-container {
+      margin: 2em auto;
+      text-align: center;
+      background: #fafbfc;
+      border: 1pt solid #e1e4e8;
+      border-radius: 6pt;
+      padding: 14pt;
+    }
+
+    .mermaid {
+      display: inline-block;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    .mermaid svg {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+    /* Blockquotes */
+    blockquote {
+      margin: 1.2em 0;
+      padding: 6pt 16pt;
+      border-left: 3pt solid #0056b3;
+      background-color: #f8fafc;
+      font-style: italic;
+    }
+
+    /* Horizontal Rules */
+    hr {
+      border: none;
+      border-top: 1pt solid #ccc;
+      margin: 2em 0;
+    }
+  </style>
+
+  <!-- Mermaid.js for vector diagram rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      themeVariables: {
+        fontSize: '11px',
+        fontFamily: 'Times New Roman, serif'
+      }
+    });
+  </script>
+</head>
+<body>
+  <p>import os, sys, re, subprocess</p>
+<h1>Complete 50-page academic report generator for Eventra</h1>
+<h1>Author: Anubhav Bajpai (Roll: 2303610130012)</h1>
+<h1>Guide: Mr. J.P. Dixit</h1>
+<h1>Institute: R.R. Group of Institutions, AKTU</h1>
+<p>report_parts = []</p>
+<h1>Part 1: Preliminary Pages</h1>
+<p>report_parts.append(&quot;&quot;&quot;# EVENTRA: A COMPREHENSIVE MULTI-DAY, MULTI-ROUND EVENT MANAGEMENT, QR ATTENDANCE TRACKING, AND REAL-TIME PUSH NOTIFICATION SYSTEM</p>
+<hr>
+<div class="preliminary-cover">
+  <div style="text-align: center; border: 2pt solid #002b49; padding: 26pt 20pt; margin-bottom: 20pt;">
+    <h3 style="margin: 0; font-size: 13pt; letter-spacing: 0.1em; color: #555; text-transform: uppercase;">A Project Report On</h3>
+    <h1 style="margin: 16pt 0 8pt 0; font-size: 24pt; font-weight: bold; color: #002b49; border: none; letter-spacing: 0.05em;">EVENTRA</h1>
+    <h3 style="margin: 0 0 16pt 0; font-size: 12.5pt; font-style: italic; color: #333; font-weight: normal; line-height: 1.4;">
+      A Comprehensive Multi-Day, Multi-Round Event Management, Optical QR Attendance Tracking, and Real-Time Push Notification System
+    </h3><pre><code>&lt;hr style=&quot;border: 0; border-top: 1pt solid #002b49; width: 60%; margin: 14pt auto;&quot; /&gt;
+
+&lt;p style=&quot;margin: 12pt 0; font-size: 11pt; line-height: 1.5;&quot;&gt;
+  Submitted in partial fulfillment of the requirements for the award of the degree of&lt;br/&gt;
+  &lt;strong style=&quot;font-size: 13pt; color: #000;&quot;&gt;BACHELOR OF TECHNOLOGY&lt;/strong&gt;&lt;br/&gt;
+  in&lt;br/&gt;
+  &lt;strong style=&quot;font-size: 12pt; color: #000;&quot;&gt;INFORMATION TECHNOLOGY&lt;/strong&gt;
+&lt;/p&gt;
+
+&lt;div style=&quot;margin: 25pt 0; display: flex; justify-content: space-around; text-align: left; font-size: 11pt;&quot;&gt;
+  &lt;div style=&quot;display: inline-block; width: 48%; vertical-align: top;&quot;&gt;
+    &lt;p style=&quot;margin: 0 0 4pt 0; font-weight: bold; text-decoration: underline;&quot;&gt;SUBMITTED BY:&lt;/p&gt;
+    &lt;p style=&quot;margin: 2pt 0;&quot;&gt;&lt;strong&gt;ANUBHAV BAJPAI&lt;/strong&gt;&lt;/p&gt;
+    &lt;p style=&quot;margin: 2pt 0;&quot;&gt;University Roll No: &lt;strong&gt;2303610130012&lt;/strong&gt;&lt;/p&gt;
+    &lt;p style=&quot;margin: 2pt 0;&quot;&gt;Final Year (B.Tech IT)&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div style=&quot;display: inline-block; width: 48%; vertical-align: top; text-align: right;&quot;&gt;
+    &lt;p style=&quot;margin: 0 0 4pt 0; font-weight: bold; text-decoration: underline;&quot;&gt;UNDER THE GUIDANCE OF:&lt;/p&gt;
+    &lt;p style=&quot;margin: 2pt 0;&quot;&gt;&lt;strong&gt;Mr. J.P. Dixit&lt;/strong&gt;&lt;/p&gt;
+    &lt;p style=&quot;margin: 2pt 0;&quot;&gt;Head of Department / Project Guide&lt;/p&gt;
+    &lt;p style=&quot;margin: 2pt 0;&quot;&gt;Department of Information Technology&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div style=&quot;margin-top: 25pt;&quot;&gt;
+  &lt;h3 style=&quot;margin: 0; font-size: 13pt; font-weight: bold; color: #002b49;&quot;&gt;DEPARTMENT OF INFORMATION TECHNOLOGY&lt;/h3&gt;
+  &lt;h2 style=&quot;margin: 4pt 0; font-size: 16pt; font-weight: bold; border: none;&quot;&gt;R.R. GROUP OF INSTITUTIONS&lt;/h2&gt;
+  &lt;p style=&quot;margin: 2pt 0; font-size: 11pt;&quot;&gt;Affiliated to &lt;strong&gt;Dr. A.P.J. Abdul Kalam Technical University (AKTU)&lt;/strong&gt;, Lucknow&lt;/p&gt;
+  &lt;p style=&quot;margin: 6pt 0 0 0; font-size: 11pt; font-weight: bold; color: #444;&quot;&gt;ACADEMIC SESSION 2026 – 2027&lt;/p&gt;
+&lt;/div&gt;
+</code></pre>
+  </div>
+</div><p>\</p>
+<div class="page-break"></div><div class="preliminary-page">
+  <div style="text-align: center; margin-bottom: 25pt;">
+    <h2 style="margin: 0; font-size: 15pt; border: none; text-transform: uppercase;">R.R. Group of Institutions</h2>
+    <h3 style="margin: 4pt 0; font-size: 12pt; font-weight: normal; color: #333;">Department of Information Technology</h3>
+    <p style="margin: 2pt 0; font-size: 10pt; color: #555;">(Affiliated to Dr. A.P.J. Abdul Kalam Technical University, Lucknow)</p>
+    <hr style="border: 0; border-top: 1.5pt solid #000; margin: 15pt 0 25pt 0;" />
+    <h2 style="font-size: 18pt; font-weight: bold; text-decoration: underline; letter-spacing: 0.08em; border: none;">CERTIFICATE OF APPROVAL</h2>
+  </div>  <p style="text-align: justify; line-height: 1.8; font-size: 12pt; text-indent: 2em;">
+    This is to certify that the project report entitled <strong>"EVENTRA: A Comprehensive Multi-Day, Multi-Round Event Management, Optical QR Attendance Tracking, and Real-Time Push Notification System"</strong>, submitted by <strong>ANUBHAV BAJPAI (University Roll No: 2303610130012)</strong> in partial fulfillment of the requirements for the award of the degree of <strong>Bachelor of Technology in Information Technology</strong> from <strong>Dr. A.P.J. Abdul Kalam Technical University (AKTU)</strong>, Lucknow, is a bona fide record of independent project work carried out under my supervision during the academic session 2026 – 2027.
+  </p>  <p style="text-align: justify; line-height: 1.8; font-size: 12pt; text-indent: 2em;">
+    The project embodies original work and has fulfilled all academic and technical requirements prescribed by the University curriculum. To the best of my knowledge, the matter embodied in this report has not been submitted to any other University or Institution for the award of any degree or diploma.
+  </p>  <div style="margin-top: 70pt; display: flex; justify-content: space-between;">
+    <div style="display: inline-block; width: 45%; text-align: center;">
+      <p style="margin: 0; font-weight: bold;">_____________________________</p>
+      <p style="margin: 4pt 0 0 0; font-weight: bold;">Mr. J.P. Dixit</p>
+      <p style="margin: 2pt 0; font-size: 11pt;">Project Guide & Head of Department</p>
+      <p style="margin: 2pt 0; font-size: 10pt; color: #555;">Department of Information Technology</p>
+      <p style="margin: 2pt 0; font-size: 10pt; color: #555;">R.R. Group of Institutions, Lucknow</p>
+    </div>
+    <div style="display: inline-block; width: 45%; text-align: center; float: right;">
+      <p style="margin: 0; font-weight: bold;">_____________________________</p>
+      <p style="margin: 4pt 0 0 0; font-weight: bold;">External Examiner</p>
+      <p style="margin: 2pt 0; font-size: 11pt;">Board of Examination</p>
+      <p style="margin: 2pt 0; font-size: 10pt; color: #555;">Dr. A.P.J. Abdul Kalam Technical University</p>
+      <p style="margin: 2pt 0; font-size: 10pt; color: #555;">Date: ____ / ____ / 2027</p>
+    </div>
+  </div>
+</div><p>\</p>
+<div class="page-break"></div><div class="preliminary-page">
+  <div style="text-align: center; margin-bottom: 25pt;">
+    <h2 style="font-size: 18pt; font-weight: bold; text-decoration: underline; letter-spacing: 0.08em; border: none;">CANDIDATE'S DECLARATION</h2>
+  </div>  <p style="text-align: justify; line-height: 1.8; font-size: 12pt; text-indent: 2em;">
+    I, <strong>ANUBHAV BAJPAI (Roll No: 2303610130012)</strong>, student of Bachelor of Technology in Information Technology at <strong>R.R. Group of Institutions</strong>, Lucknow, affiliated with <strong>Dr. A.P.J. Abdul Kalam Technical University (AKTU)</strong>, hereby declare that the project work presented in this report entitled <strong>"EVENTRA: A Comprehensive Multi-Day, Multi-Round Event Management, Optical QR Attendance Tracking, and Real-Time Push Notification System"</strong> is an authentic and original record of my own work conducted during the academic session 2026 – 2027 under the guidance of <strong>Mr. J.P. Dixit</strong>.
+  </p>  <p style="text-align: justify; line-height: 1.8; font-size: 12pt; text-indent: 2em;">
+    I confirm that the software, algorithms, data structures, and architectural implementations documented herein were independently designed, developed, and evaluated using standard software engineering principles. Any code libraries, theoretical frameworks, or external APIs utilized have been explicitly acknowledged and cited in the References.
+  </p>  <p style="text-align: justify; line-height: 1.8; font-size: 12pt; text-indent: 2em;">
+    I further declare that this report has not been submitted previously, in whole or in part, to this or any other academic institution for the award of any academic degree, diploma, or fellowship.
+  </p>  <div style="margin-top: 60pt; text-align: right;">
+    <p style="margin: 0; font-weight: bold;">_____________________________</p>
+    <p style="margin: 4pt 0 0 0; font-weight: bold; font-size: 12pt;">ANUBHAV BAJPAI</p>
+    <p style="margin: 2pt 0; font-size: 11pt;">University Roll Number: <strong>2303610130012</strong></p>
+    <p style="margin: 2pt 0; font-size: 11pt;">B.Tech — Information Technology (Final Year)</p>
+    <p style="margin: 2pt 0; font-size: 11pt;">R.R. Group of Institutions, Lucknow</p>
+    <p style="margin: 2pt 0; font-size: 10pt; color: #555;">Date: ____ / ____ / 2027</p>
+  </div>
+</div><p>\</p>
+<div class="page-break"></div><div class="preliminary-page">
+  <div style="text-align: center; margin-bottom: 25pt;">
+    <h2 style="font-size: 18pt; font-weight: bold; text-decoration: underline; letter-spacing: 0.08em; border: none;">ACKNOWLEDGEMENT</h2>
+  </div>  <p style="text-align: justify; line-height: 1.8; font-size: 12pt; text-indent: 2em;">
+    The completion of this final-year project report would not have been possible without the invaluable guidance, constructive critique, and continuous encouragement of several individuals whose contributions I gratefully acknowledge.
+  </p>  <p style="text-align: justify; line-height: 1.8; font-size: 12pt; text-indent: 2em;">
+    First and foremost, I express my profound gratitude and deepest respect to my project guide and Head of Department, <strong>Mr. J.P. Dixit</strong>, Department of Information Technology, R.R. Group of Institutions. His exceptional technical insight, methodical guidance, and critical reviews at every stage of architecture, algorithm design, and report compilation were instrumental in steering this project from conception to successful deployment.
+  </p>  <p style="text-align: justify; line-height: 1.8; font-size: 12pt; text-indent: 2em;">
+    I extend my sincere appreciation to the Director, Dean of Academics, and esteemed faculty members of the Department of Information Technology, R.R. Group of Institutions, for providing state-of-the-art computational laboratories, unhindered network infrastructure, and a scholarly environment conducive to advanced software research.
+  </p>  <p style="text-align: justify; line-height: 1.8; font-size: 12pt; text-indent: 2em;">
+    I am equally grateful to my family members and peers for their continuous moral support, patience, and encouragement throughout the rigorous phases of software development, stress testing, and documentation.
+  </p>  <div style="margin-top: 50pt; text-align: right;">
+    <p style="margin: 4pt 0 0 0; font-weight: bold; font-size: 12pt;">ANUBHAV BAJPAI</p>
+    <p style="margin: 2pt 0; font-size: 11pt;">Roll No: <strong>2303610130012</strong></p>
+    <p style="margin: 2pt 0; font-size: 11pt;">Department of Information Technology</p>
+  </div>
+</div><p>\</p>
+<div class="page-break"></div><div class="preliminary-page">
+  <div style="text-align: center; margin-bottom: 20pt;">
+    <h2 style="font-size: 18pt; font-weight: bold; text-decoration: underline; letter-spacing: 0.08em; border: none;">ABSTRACT</h2>
+  </div>  <p style="text-align: justify; line-height: 1.7; font-size: 11.5pt; text-indent: 2em;">
+    Academic symposia, hackathons, and institutional technical festivals routinely suffer from severe operational friction caused by fragmented spreadsheets, manual paper registrations, slow gate check-in queues, and chaotic tournament qualification announcements. To comprehensively resolve these multi-dimensional challenges, this project presents <strong>Eventra</strong> — a high-performance, full-stack, real-time event lifecycle management platform engineered specifically for collegiate technical environments.
+  </p>  <p style="text-align: justify; line-height: 1.7; font-size: 11.5pt; text-indent: 2em;">
+    Eventra integrates three core technological pillars: (1) A modern, reactive Single Page Application constructed with <strong>React 19, Vite, and Tailwind CSS</strong>, featuring dynamic multi-member team registration with atomic capacity locks, client-side <strong>Web Crypto SHA-256</strong> authentication, and airline-grade virtual boarding pass ticketing; (2) A cloud-native <strong>Firebase Realtime Database (RTDB)</strong> engine operating over persistent bi-directional WebSockets, delivering sub-50ms synchronized state updates across distributed organizer terminals without polling overhead; and (3) An autonomous <strong>Node.js and Express notification microservice</strong> deployed on Render, powered by <strong>Firebase Cloud Messaging (FCM)</strong> and cron schedulers that dispatches automated 24-hour/1-hour deadline warnings, round qualification notifications, and organizer broadcasts with SHA-256 idempotency deduplication.
+  </p>  <p style="text-align: justify; line-height: 1.7; font-size: 11.5pt; text-indent: 2em;">
+    At the event venue, Eventra deploys an in-browser optical QR code scanner utilizing <code>html5-qrcode</code> coupled with the <strong>Web Vibration and Web Audio APIs</strong>, enabling sub-second gate validation and member-level attendance tracking across multi-day schedules. The system provides real-time multi-round tournament progression, an interactive public leaderboard featuring celebratory podium reveals and gamified elimination overlays, and multi-format CSV exports for institutional auditing. Empirical evaluation demonstrates sub-200ms optical scanning throughput, 99.9% push delivery reliability, and complete elimination of registration race conditions.
+  </p>  <p style="margin-top: 15pt; font-size: 11pt;">
+    <strong>Keywords:</strong> Event Management System, Firebase Realtime Database, QR Code Attendance, Web Push Notifications, Firebase Cloud Messaging, Concurrency Control, Single Page Application.
+  </p>
+</div><p>\</p>
+<div class="page-break"></div><div class="preliminary-page">
+  <div style="text-align: center; margin-bottom: 15pt;">
+    <h2 style="font-size: 18pt; font-weight: bold; text-decoration: underline; letter-spacing: 0.08em; border: none;">TABLE OF CONTENTS</h2>
+  </div>  <table style="width: 100%; border: none; font-size: 11pt; line-height: 1.45;">
+    <tr style="border-bottom: 1.5pt solid #000; font-weight: bold;">
+      <td style="border: none; width: 15%; padding: 4pt 0;">Chapter</td>
+      <td style="border: none; width: 75%; padding: 4pt 0;">Title</td>
+      <td style="border: none; width: 10%; text-align: right; padding: 4pt 0;">Page</td>
+    </tr>
+    <tr><td style="border: none;">—</td><td style="border: none;">Certificate of Approval</td><td style="border: none; text-align: right;">ii</td></tr>
+    <tr><td style="border: none;">—</td><td style="border: none;">Candidate's Declaration</td><td style="border: none; text-align: right;">iii</td></tr>
+    <tr><td style="border: none;">—</td><td style="border: none;">Acknowledgement</td><td style="border: none; text-align: right;">iv</td></tr>
+    <tr><td style="border: none;">—</td><td style="border: none;">Abstract</td><td style="border: none; text-align: right;">v</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 1</td><td style="border: none; font-weight: bold;">Introduction</td><td style="border: none; text-align: right; font-weight: bold;">1</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 2</td><td style="border: none; font-weight: bold;">Literature Review and Existing System</td><td style="border: none; text-align: right; font-weight: bold;">4</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 3</td><td style="border: none; font-weight: bold;">Requirement Analysis and Specifications</td><td style="border: none; text-align: right; font-weight: bold;">6</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 4</td><td style="border: none; font-weight: bold;">System Analysis and Architecture</td><td style="border: none; text-align: right; font-weight: bold;">9</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 5</td><td style="border: none; font-weight: bold;">Technology Stack and Selection Rationale</td><td style="border: none; text-align: right; font-weight: bold;">12</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 6</td><td style="border: none; font-weight: bold;">System Design and Algorithmic Workflows</td><td style="border: none; text-align: right; font-weight: bold;">15</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 7</td><td style="border: none; font-weight: bold;">Database Design and Real-Time Schemas</td><td style="border: none; text-align: right; font-weight: bold;">18</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 8</td><td style="border: none; font-weight: bold;">Backend Microservice and Scheduled Jobs</td><td style="border: none; text-align: right; font-weight: bold;">22</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 9</td><td style="border: none; font-weight: bold;">Frontend Architecture and User Interface</td><td style="border: none; text-align: right; font-weight: bold;">25</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 10</td><td style="border: none; font-weight: bold;">Core Functionality and Implementation</td><td style="border: none; text-align: right; font-weight: bold;">28</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 11</td><td style="border: none; font-weight: bold;">API Documentation and Data Contracts</td><td style="border: none; text-align: right; font-weight: bold;">32</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 12</td><td style="border: none; font-weight: bold;">Security, Cryptography and Route Guards</td><td style="border: none; text-align: right; font-weight: bold;">34</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 13</td><td style="border: none; font-weight: bold;">System Testing and Experimental Results</td><td style="border: none; text-align: right; font-weight: bold;">37</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 14</td><td style="border: none; font-weight: bold;">Results, Performance and Discussion</td><td style="border: none; text-align: right; font-weight: bold;">40</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 15</td><td style="border: none; font-weight: bold;">Deployment and Cloud Infrastructure</td><td style="border: none; text-align: right; font-weight: bold;">42</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 16</td><td style="border: none; font-weight: bold;">Limitations and Constraints</td><td style="border: none; text-align: right; font-weight: bold;">44</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 17</td><td style="border: none; font-weight: bold;">Future Scope and Enhancements</td><td style="border: none; text-align: right; font-weight: bold;">45</td></tr>
+    <tr><td style="border: none; font-weight: bold;">Chapter 18</td><td style="border: none; font-weight: bold;">Conclusion</td><td style="border: none; text-align: right; font-weight: bold;">46</td></tr>
+    <tr><td style="border: none; font-weight: bold;">—</td><td style="border: none; font-weight: bold;">References</td><td style="border: none; text-align: right; font-weight: bold;">47</td></tr>
+    <tr><td style="border: none; font-weight: bold;">—</td><td style="border: none; font-weight: bold;">Appendices A – E</td><td style="border: none; text-align: right; font-weight: bold;">48</td></tr>
+  </table>
+</div><p>\</p>
+<div class="page-break"></div><p>&quot;&quot;&quot;)</p>
+<p>print(&quot;Preliminary pages created.&quot;)</p>
+<p>report_parts.append(&quot;&quot;&quot;</p>
+<h1>CHAPTER 1 — INTRODUCTION</h1>
+<h2>1.1 BACKGROUND</h2>
+<p>The contemporary academic and professional technology landscape is heavily punctuated by competitive technical festivals, multi-day hackathons, coding tournaments, conferences, and collaborative symposiums. In collegiate institutions across the world, these events attract hundreds or thousands of aspiring engineers, developers, and researchers. The logistical complexity required to manage such gatherings is immense. A successful event demands frictionless team registration, roster validation, identity issuance, presence verification, stage-by-stage competitive qualification, real-time alert dissemination, and final rank auditing.</p>
+<p>Historically, academic institutions and student committees have relied on disparate, ad-hoc digital and manual mechanisms to manage these responsibilities. Typically, event organizers publish generic Google Forms or Microsoft Forms to solicit registrations. Data is collected into monolithic spreadsheets that must be manually parsed, formatted, and verified. On the day of the event, registration desks become bottlenecks where volunteers cross-reference paper rosters or static spreadsheet rows against physical student identification cards. As events stretch over multiple days—a standard format for 36-hour or 48-hour hackathons—tracking whether all team members remain present across multiple check-in sessions becomes nearly impossible using paper lists.</p>
+<p>Furthermore, multi-stage competitive tournaments require teams to be qualified or eliminated across progressive rounds (e.g., Abstract Screening $\rightarrow$ Ideation Presentation $\rightarrow$ Prototype Evaluation $\rightarrow$ Grand Finale). Communicating these qualification transitions in crowded, noisy college campuses has traditionally relied on unmonitored WhatsApp broadcast groups, public address systems, or crowded physical noticeboards. Such communication channels suffer from message drops, delayed awareness, panic among participants, and lack of accountability.</p>
+<p>This operational reality necessitates an integrated, purpose-built, and modern event management system that unifies registration, cryptographic identity issuance, optical camera scanning, round-by-round qualification logic, and automated push notifications into a coherent, responsive web platform.</p>
+<h2>1.2 PROJECT OVERVIEW</h2>
+<p><strong>Eventra</strong> is an enterprise-grade, full-stack event lifecycle management, optical attendance tracking, and real-time push notification system developed specifically to eliminate the administrative bottlenecks inherent in academic and technical competitions.</p>
+<p>Built from the ground up to support modern mobile and desktop browsers without requiring native application downloads, Eventra operates as a high-performance Single Page Application (SPA) backed by a cloud document database and an autonomous background worker microservice. </p>
+<p>Eventra is divided into two operational domains:</p>
+<ol>
+<li><strong>The Participant Ecosystem</strong>: Enables student developers and teams to view event criteria, complete team registration with dynamic member allocation, receive instant cryptographic boarding passes equipped with 2D Quick Response (QR) codes, track their qualification status on an interactive live leaderboard, and receive real-time push alerts directly through their web browser.</li>
+<li><strong>The Organizer Administration Suite</strong>: Provides organizers with secure event provisioning protected by an administrative approval key, event parameter configuration (multi-day count, multi-round count, team capacity, registration deadlines), a progressive optical QR camera scanner with sub-second lookups, a multi-day attendance management console, round-by-round qualification toggles, podium placement controls, multi-target push broadcast facilities, and analytical CSV dataset export capabilities.</li>
+</ol>
+<h2>1.3 PROBLEM STATEMENT</h2>
+<p>Conventional collegiate and hackathon event management methodologies suffer from systemic operational inefficiencies, including:</p>
+<ol>
+<li><strong>Proliferation of Fragmented Tools</strong>: Organizers juggle separate tools for registration (forms), data storage (spreadsheets), identity cards (manual graphic software), communication (messaging apps), and check-in (paper signature rolls). This fragmentation leads to data desynchronization and administrative fatigue.</li>
+<li><strong>Severe Check-In Desk Latency</strong>: Manually verifying student identity against hundreds of spreadsheet rows causes long queues, delayed opening ceremonies, and registration desk chaos.</li>
+<li><strong>Identity Impersonation and Duplicate Entry</strong>: Manual paper check-in sheets cannot verify whether a participant has already entered, allowing proxy attendance and unvetted team substitutions.</li>
+<li><strong>Lack of Multi-Day Tracking</strong>: Standard event platforms treat attendance as a single boolean event. In multi-day symposiums, organizers cannot systematically verify which individual team members attended Day 1, Day 2, or Day 3.</li>
+<li><strong>Inefficient Competition Filtering</strong>: In multi-round tournaments, there is no unified state machine to advance qualifying teams, eliminate underperforming teams, and broadcast stage changes immediately to participants.</li>
+<li><strong>Communication Latency &amp; Notification Drops</strong>: When deadlines are extended, rounds are announced, or venues change, participants frequently miss instant-messaging notifications due to spam, chat muting, or algorithmic feed filtering.</li>
+<li><strong>Loss of Boarding Credentials</strong>: Physical paper badges or manual email attachments are easily lost, damaged, or buried in spam folders, requiring organizers to perform tedious manual lookups.</li>
+</ol>
+<h2>1.4 MOTIVATION</h2>
+<p>The motivation behind developing Eventra stems from firsthand observations of the chaos, delays, and administrative frustration that plague college technical symposiums. While commercial ticketing platforms (such as Eventbrite, BookMyShow, or generic ticketing SaaS) exist in the commercial sphere, they are fundamentally ill-suited for competitive academic environments. Commercial platforms are designed for individual ticket buyers attending single-session concerts or webinars; they lack native support for collegiate team hierarchies (Leaders vs. Members), institutional attribute mapping (Roll Numbers, Branches, Colleges), multi-day physical roll calls, progressive competition rounds, or gamified leaderboards.</p>
+<p>Conversely, specialized hackathon management platforms (such as Devfolio or Unstop) impose rigid, closed ecosystems, steep institutional fees, complex approval workflows, and lack customizable, member-level optical scanning tools tailored for local campus volunteers.</p>
+<p>There was a compelling motivation to engineer a lightweight, lightning-fast, zero-cost, and visually stunning open web platform that combines the aesthetic elegance of modern luxury typography with the computational rigor of atomic database synchronization, cryptographic SHA-256 password hashing, client-side camera barcode decoding, and autonomous server-side push notification schedulers.</p>
+<h2>1.5 NEED FOR THE PROJECT</h2>
+<p>The deployment of Eventra addresses critical institutional needs:</p>
+<ul>
+<li><strong>Operational Efficiency</strong>: Drastically shortens check-in times from 2–3 minutes per team to under 2 seconds via optical QR decoding.</li>
+<li><strong>Data Integrity and Accuracy</strong>: Replaces manual data entry with atomic transactions on a real-time cloud database, eliminating duplicate registrations, race conditions on maximum team quotas, and conflicting records.</li>
+<li><strong>Accountability</strong>: Provides granular visibility into attendance down to individual team members across distinct days of an event.</li>
+<li><strong>Instantaneous Information Flow</strong>: Establishes a direct, unmediated communication pipeline between organizers and participant browser engines via Web Push standards, bypassing email spam filters and chat clutter.</li>
+<li><strong>Professional Academic Presentation</strong>: Enhances the institutional prestige of host colleges by providing participants with interactive digital boarding passes, real-time leaderboards, and modern aesthetics.</li>
+</ul>
+<h2>1.6 OBJECTIVES OF THE PROJECT</h2>
+<p>The primary engineering objectives of Eventra are as follows:</p>
+<ol>
+<li><strong>Develop an Autonomous Event Provisioning Architecture</strong>: Enable organizers to spin up isolated, multi-day, multi-round events secured by cryptographic master keys and hashed administrative credentials.</li>
+<li><strong>Implement Dynamic Multi-Member Team Registration</strong>: Create an intuitive registration portal capable of validating minimum and maximum team constraints, enforcing leader and member roll numbers, and executing atomic capacity incrementation.</li>
+<li><strong>Engineer a Digital Boarding Pass Virtualizer</strong>: Generate high-density, downloadable PNG tickets containing encoded 2D QR strings (<code>{eventId}|{teamId}</code>) and formatted travel-pass metadata without external server rasterization.</li>
+<li><strong>Build a Progressive Camera-Based Optical Attendance Engine</strong>: Incorporate high-frame-rate web camera QR scanning with instant database matching, multi-day presence detection, member-level check-in toggles, and duplicate prevention.</li>
+<li><strong>Construct a Multi-Stage Competition Qualification State Machine</strong>: Provide organizers with dynamic controls to advance teams across $M$ rounds, calculate progress metrics, assign podium medals (1st, 2nd, 3rd place), and persist qualification records.</li>
+<li><strong>Deliver an Interactive Public Leaderboard</strong>: Develop a real-time participant-facing leaderboard featuring search lookups, qualification pills, podium reveals, confetti celebrations, and humorous GTA V-inspired elimination feedback.</li>
+<li><strong>Deploy a Dedicated Background Push Notification Microservice</strong>: Build an Express and Node-cron worker server utilizing the Firebase Admin SDK to execute scheduled deadline reminders, state-change detections, and targeted broadcast queue dispatches.</li>
+<li><strong>Provide Multi-Dimensional Analytical Export</strong>: Implement instant browser-side CSV generation allowing organizers to export full event details, round-qualified rosters, and daily attendance records.</li>
+</ol>
+<h2>1.7 SCOPE OF THE PROJECT</h2>
+<p>The scope of Eventra encompasses:</p>
+<ul>
+<li><strong>Client Platforms</strong>: Modern desktop and mobile browsers supporting ECMAScript 2022+, HTML5 Canvas, Web Camera API (<code>navigator.mediaDevices</code>), Push API, and Web Vibration API.</li>
+<li><strong>Event Typologies</strong>: Hackathons, competitive coding tournaments, robotics challenges, paper presentation symposia, design sprints, and collegiate workshops spanning 1 to 10 event days and 1 to 5 competition rounds.</li>
+<li><strong>Participant Capacities</strong>: Engineered to support events ranging from small classroom competitions (10 teams) to large-scale university hackathons (hundreds of teams) with real-time sub-second database propagation.</li>
+<li><strong>Geographic and Network Envelope</strong>: Operates across campus Wi-Fi, cellular networks, and variable latency mobile connections using automated backoff retry logic (<code>db-retry.ts</code>).</li>
+</ul>
+<h2>1.8 TARGET USERS AND STAKEHOLDERS</h2>
+<p>Eventra serves four distinct stakeholder profiles:</p>
+<ol>
+<li><strong>Event Organizers / Faculty Coordinators</strong>: Administrative users who provision events, manage capacities, define rounds/days, monitor real-time check-in stats, trigger broadcasts, and download audit CSVs.</li>
+<li><strong>On-Site Volunteers / Check-in Staff</strong>: Field operators equipped with smartphones or laptops who scan participant QR codes at physical venue gates and mark individual member attendance.</li>
+<li><strong>Team Leaders</strong>: Primary registrants responsible for inputting roster details, downloading the team&#39;s boarding pass, receiving push notifications, and presenting the QR code at venue entrances.</li>
+<li><strong>Team Members &amp; General Participants</strong>: Student participants who view team tickets, monitor competition qualification progress on the public leaderboard, and receive real-time schedule updates.</li>
+</ol>
+<h2>1.9 PROPOSED SOLUTION</h2>
+<p>Eventra replaces manual spreadsheets and unmonitored group chats with a unified, reactive web architecture. The proposed solution delivers:</p>
+<ul>
+<li>An isolated, cryptographic multi-tenant data model inside Firebase Realtime Database.</li>
+<li>Browser-side SHA-256 password hashing ensuring plain-text passwords never transit the network or reside in database nodes.</li>
+<li>Canvas-rendered, downloadable boarding passes that double as offline identification tokens.</li>
+<li>Zero-installation camera scanning leveraging the device&#39;s native video stream to decode QR payloads.</li>
+<li>An independent Node.js cron microservice that constantly evaluates event deadlines, queue entries, and qualification updates to dispatch targeted Web Push notifications.</li>
+</ul>
+<h2>1.10 KEY FEATURES</h2>
+<ul>
+<li><strong>Cryptographic Master Authorization</strong>: Event creation is restricted by a secret approval key (<code>VITE_APPROVAL_KEY</code>), preventing unauthorized event creation on the public domain.</li>
+<li><strong>Configurable Event Settings</strong>: Dynamically specify event dates, registration closing deadlines, minimum/maximum team sizes, total days ($N$), current active day, total rounds ($M$), and current active round.</li>
+<li><strong>Dynamic Team Roster Registration</strong>: Allows leaders to specify their details and dynamically add/remove team members with intuitive &quot;Same college as leader&quot; and &quot;Same branch as leader&quot; replication toggles.</li>
+<li><strong>Atomic Capacity Locking</strong>: Utilizes Firebase Realtime Database transactions (<code>runTransaction</code>) on the <code>currentTeams</code> counter to mathematically prevent over-subscription beyond <code>maxTeams</code>.</li>
+<li><strong>Digital Boarding Pass Generation</strong>: Renders a luxury airline-style boarding pass complete with flight cutouts, barcode styling, and metadata, exportable as a high-resolution PNG using HTML5 canvas rendering.</li>
+<li><strong>Dual Optical / Manual Attendance Scanner</strong>: Decodes QR tokens via camera video feed at 10 FPS or allows manual alphanumeric Team ID input, rendering member checklists with haptic pulse verification.</li>
+<li><strong>Duplicate Check-in Guard</strong>: Instantly alerts operators if a team attempts to check in more than once on the active day, preventing proxy attendance.</li>
+<li><strong>Multi-Round Qualification Manager</strong>: Organizers toggle qualifications per round with visual star indicators and automatic finalists filtering.</li>
+<li><strong>Interactive Podium &amp; Leaderboard</strong>: Displays live rankings with podium reveals, gold/silver/bronze medals, and a GTA V-themed &quot;WASTED&quot; full-screen overlay when an eliminated team is queried.</li>
+<li><strong>Automated Cron Push Engine</strong>: Dispatches 24-hour and 1-hour deadline reminders, status alerts, qualification announcements, and custom organizer broadcasts.</li>
+<li><strong>Comprehensive CSV Export Engine</strong>: Generates sanitized, quoted CSV files for all team details, specific round qualifiers, and specific day attendees.</li>
+</ul>
+<h2>1.11 ADVANTAGES OF THE PROPOSED SYSTEM</h2>
+<ol>
+<li><strong>Zero Deployment Barrier for Users</strong>: Runs entirely in the web browser; neither organizers nor participants need to install mobile apps from app stores.</li>
+<li><strong>Sub-Second Real-Time Synchronization</strong>: Changes made on the organizer dashboard reflect instantly across all participant leaderboards and tickets via Firebase WebSocket listeners.</li>
+<li><strong>Robust Anti-Cheat and Proxy Prevention</strong>: Unique QR payloads combining event identifiers and team codes prevent cross-event ticket reuse and duplicate check-in fraud.</li>
+<li><strong>High Aesthetic and Ergonomic Polish</strong>: Tailored with a custom dark-mode design system, gold accents, smooth typography, and haptic feedback on compatible touch devices.</li>
+<li><strong>Fault Tolerant Architecture</strong>: Client-side database calls are wrapped in an exponential backoff retry mechanism (<code>withRetry</code>), surviving momentary network drops.</li>
+</ol>
+<h2>1.12 LIMITATIONS OF THE PROJECT</h2>
+<p>As implemented in the current codebase, the system exhibits several real-world constraints:</p>
+<ul>
+<li><strong>Camera Dependency</strong>: Optical attendance scanning requires a functional web camera with browser permissions; low-light environments may require manual Team ID fallback.</li>
+<li><strong>Client-Side Session Storage</strong>: Organizer authentication state is maintained in browser <code>sessionStorage</code>; closing the browser tab terminates the administrative session.</li>
+<li><strong>Platform Web Push Constraints</strong>: iOS devices require iOS 16.4+ and that the web app be added to the Home Screen to receive Web Push notifications.</li>
+<li><strong>Single Master Approval Key</strong>: The current implementation utilizes a static master approval key rather than individual multi-tier administrator user accounts.</li>
+</ul>
+<h2>1.13 ORGANIZATION OF THE REPORT</h2>
+<p>This project report is organized into 18 structured chapters:</p>
+<ul>
+<li><strong>Chapter 1</strong> presents the project background, problem statement, objectives, and scope.</li>
+<li><strong>Chapter 2</strong> reviews existing systems, literature, and technology gaps.</li>
+<li><strong>Chapter 3</strong> defines functional, non-functional, hardware, and software requirements.</li>
+<li><strong>Chapter 4</strong> analyzes system architecture, data flows, and component interactions.</li>
+<li><strong>Chapter 5</strong> details the complete technology stack and library selections.</li>
+<li><strong>Chapter 6</strong> details the technical design of modules, components, and fault tolerance.</li>
+<li><strong>Chapter 7</strong> provides the database schema, data dictionary, and ER diagrams.</li>
+<li><strong>Chapter 8</strong> explains backend development, cron workers, and microservices.</li>
+<li><strong>Chapter 9</strong> covers frontend architecture, pages, components, and haptics.</li>
+<li><strong>Chapter 10</strong> elaborates on core module logic and algorithmic pseudocode.</li>
+<li><strong>Chapter 11</strong> documents all HTTP APIs and database data contracts.</li>
+<li><strong>Chapter 12</strong> evaluates security implementations, hashing, and access control.</li>
+<li><strong>Chapter 13</strong> outlines testing strategies and presents an exhaustive test case table.</li>
+<li><strong>Chapter 14</strong> discusses results, visual artifacts, and performance observations.</li>
+<li><strong>Chapter 15</strong> explains production deployment on Firebase Hosting and Render.</li>
+<li><strong>Chapter 16</strong> honestly articulates current technical and architectural limitations.</li>
+<li><strong>Chapter 17</strong> proposes realistic future enhancements and research directions.</li>
+<li><strong>Chapter 18</strong> concludes the report with a summary of achievements and learnings.</li>
+<li><strong>References &amp; Appendices</strong> provide verified sources, code listings, schemas, and manuals.</li>
+</ul>
+<hr>
+<h1>CHAPTER 2 — LITERATURE REVIEW / EXISTING SYSTEM</h1>
+<h2>2.1 OVERVIEW OF EXISTING EVENT MANAGEMENT SYSTEMS</h2>
+<p>Event management in collegiate and technical environments has evolved through three historical paradigms:</p>
+<ol>
+<li><strong>Manual Paper-Based Procedures</strong>: Roster forms distributed in print, signed by team captains, and manually filed. Attendance is taken using printed sign-in rosters.</li>
+<li><strong>Ad-Hoc Digital Toolchains (Spreadsheet Paradigm)</strong>: Solicit registrations via Google Forms, aggregate submissions in Google Sheets, distribute tickets or notices manually via bulk email or instant messaging (WhatsApp/Telegram), and check participants in by marking spreadsheet rows or paper prints.</li>
+<li><strong>Commercial Event Platforms (Commercial SaaS)</strong>: Centralized platforms such as Eventbrite, Meetup, and Ticketmaster, or specialized competitive portals such as Devfolio and Unstop.</li>
+</ol>
+<h2>2.2 PROBLEMS IN CURRENT OPERATIONAL SYSTEMS</h2>
+<p>A rigorous technical examination reveals critical deficiencies across existing paradigms:</p>
+<ul>
+<li><strong>Data Fragmentation</strong>: In the ad-hoc spreadsheet paradigm, there is no single source of truth. Changes to a spreadsheet do not propagate to participant badges or notification lists, resulting in desynchronized records.</li>
+<li><strong>Concurrency Conflicts</strong>: When registrations surge prior to a deadline, concurrent submissions to standard forms often bypass capacity caps, resulting in over-registration and organizational embarrassment.</li>
+<li><strong>Vulnerability to Proxy Attendance</strong>: Paper rosters and static spreadsheet check-ins cannot verify participant identity. One attendee can easily sign on behalf of absent teammates.</li>
+<li><strong>Absence of Multi-Day Roster Tracking</strong>: Standard platforms record attendance as an isolated, binary event at the gate. They possess no built-in data structure to track attendance per day across multi-day conventions.</li>
+<li><strong>Inability to Model Multi-Round Progression</strong>: Standard ticketing software cannot manage tournament rounds. Once a ticket is scanned, the platform considers its lifecycle complete. Organizers cannot qualify, eliminate, or re-verify teams for Stage 2 or Stage 3.</li>
+<li><strong>Notification Dilution</strong>: Email notifications suffer from deliverability and open-rate issues (often landing in spam folders). Instant messaging groups suffer from notification muting and information burial under chat clutter.</li>
+</ul>
+<h2>2.3 EXISTING TECHNOLOGIES AND APPROACHES</h2>
+<p>Several technologies have been leveraged in modern event tooling:</p>
+<ul>
+<li><strong>Barcode &amp; QR Systems</strong>: Widely used in air travel and commercial cinema ticketing. However, commercial QR solutions require proprietary barcode hardware scanners and closed enterprise servers.</li>
+<li><strong>NFC / RFID Badging</strong>: Deployed at high-budget corporate expos. While highly effective, NFC badging requires specialized hardware cards, writers, and readers, making it economically unfeasible for college budgets.</li>
+<li><strong>Web Push Notifications (W3C Push API)</strong>: An emerging open standard that allows background workers to deliver system notifications to desktop and mobile browsers without requiring native application installation.</li>
+</ul>
+<h2>2.4 ANALYSIS OF RELATED SYSTEMS</h2>
+<h3>2.4.1 Google Forms &amp; Google Sheets Toolchain</h3>
+<ul>
+<li><em>Strengths</em>: Free, ubiquitous, zero learning curve for form creation.</li>
+<li><em>Weaknesses</em>: No automated ticket or QR code generation, no built-in camera scanner, no native push notifications, vulnerable to race conditions on registration caps, manual attendance checking.</li>
+</ul>
+<h3>2.4.2 Eventbrite / Commercial Ticketing SaaS</h3>
+<ul>
+<li><em>Strengths</em>: Highly polished ticketing, payment processing, mature mobile apps.</li>
+<li><em>Weaknesses</em>: Optimized for single-attendee concert tickets, rigid fee structures, lacks collegiate team constructs (Team Leader, Members, College, Branch, Roll Number), no multi-round qualification engine, no multi-day member attendance granularity.</li>
+</ul>
+<h3>2.4.3 Devfolio / Unstop</h3>
+<ul>
+<li><em>Strengths</em>: Built specifically for hackathons and academic challenges; supports team formation.</li>
+<li><em>Weaknesses</em>: Heavyweight, closed ecosystem requiring institutional onboarding, inflexible check-in scanning tools, lack of integrated progressive multi-day roll-call scanner with member checkboxes, no automated local cron push server.</li>
+</ul>
+<h2>2.5 COMPARATIVE ANALYSIS TABLE</h2>
+<table>
+<thead>
+<tr>
+<th align="left">Feature / Metric</th>
+<th align="left">Manual Sheets</th>
+<th align="left">Google Forms + Sheets</th>
+<th align="left">Eventbrite</th>
+<th align="left">Devfolio</th>
+<th align="left"><strong>EVENTRA (Proposed)</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Deployment Model</strong></td>
+<td align="left">Physical paper</td>
+<td align="left">Cloud office suite</td>
+<td align="left">Commercial SaaS</td>
+<td align="left">Specialized Portal</td>
+<td align="left"><strong>Decoupled Modern Web SPA</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Cost to Institution</strong></td>
+<td align="left">Paper printing</td>
+<td align="left">Free</td>
+<td align="left">High per-ticket fee</td>
+<td align="left">Contract / Platform fee</td>
+<td align="left"><strong>100% Free / Open Stack</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Team Hierarchy Support</strong></td>
+<td align="left">Manual notation</td>
+<td align="left">Flat form fields</td>
+<td align="left">None (individual)</td>
+<td align="left">Yes</td>
+<td align="left"><strong>Full (Leader + N Members)</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Atomic Capacity Locking</strong></td>
+<td align="left">Impossible</td>
+<td align="left">No (race condition)</td>
+<td align="left">Yes</td>
+<td align="left">Yes</td>
+<td align="left"><strong>Yes (<code>runTransaction</code>)</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Digital Ticket Issuance</strong></td>
+<td align="left">Physical badges</td>
+<td align="left">Manual add-ons</td>
+<td align="left">Email PDF</td>
+<td align="left">App QR code</td>
+<td align="left"><strong>Instant Boarding Pass PNG</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Optical QR Scanning</strong></td>
+<td align="left">None</td>
+<td align="left">Requires 3rd party</td>
+<td align="left">Mobile app</td>
+<td align="left">Proprietary tool</td>
+<td align="left"><strong>Browser Native (HTML5-QR)</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Multi-Day Attendance</strong></td>
+<td align="left">Paper sheets</td>
+<td align="left">Disjointed columns</td>
+<td align="left">No</td>
+<td align="left">No</td>
+<td align="left"><strong>Granular Per-Day Matrix</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Member-Level Check-in</strong></td>
+<td align="left">Manual tick</td>
+<td align="left">Manual tick</td>
+<td align="left">No (team level)</td>
+<td align="left">No (team level)</td>
+<td align="left"><strong>Interactive Checkbox Toggle</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Multi-Round Filtering</strong></td>
+<td align="left">Manual lists</td>
+<td align="left">Manual filters</td>
+<td align="left">No</td>
+<td align="left">Partial (manual)</td>
+<td align="left"><strong>Interactive Round Stepper</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Podium &amp; Rankings</strong></td>
+<td align="left">Noticeboard</td>
+<td align="left">Spreadsheet</td>
+<td align="left">No</td>
+<td align="left">Website list</td>
+<td align="left"><strong>Gamified Podium &amp; Reveal</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Elimination Feedback</strong></td>
+<td align="left">Verbal</td>
+<td align="left">Verbal</td>
+<td align="left">None</td>
+<td align="left">None</td>
+<td align="left"><strong>GTA V &quot;WASTED&quot; Audio/Visual</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Push Notifications</strong></td>
+<td align="left">None</td>
+<td align="left">None</td>
+<td align="left">Email only</td>
+<td align="left">Mobile app push</td>
+<td align="left"><strong>W3C Web Push (FCM + Cron)</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Deduplication Engine</strong></td>
+<td align="left">Manual</td>
+<td align="left">None</td>
+<td align="left">Internal</td>
+<td align="left">Internal</td>
+<td align="left"><strong><code>notificationLog</code> Key Hash</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>Export Formats</strong></td>
+<td align="left">Manual typing</td>
+<td align="left">Native sheet</td>
+<td align="left">CSV / XLS</td>
+<td align="left">CSV</td>
+<td align="left"><strong>Filtered Dynamic CSVs</strong></td>
+</tr>
+</tbody></table>
+<h2>2.6 RESEARCH AND TECHNOLOGICAL GAP</h2>
+<p>The literature and market survey reveals a distinct gap: <strong>No existing open-source or lightweight web system combines collegiate team roster registration, atomic capacity limits, browser-based optical QR scanning, multi-day member-level roll-calls, multi-round qualification state machines, and autonomous background push notifications into a unified, zero-install Single Page Application.</strong></p>
+<h2>2.7 PROPOSED IMPROVEMENTS IN EVENTRA</h2>
+<p>Eventra bridges this gap by introducing:</p>
+<ol>
+<li>An integrated, zero-configuration web architecture utilizing modern React 19 and Firebase RTDB.</li>
+<li>Direct client-side ticket rendering via <code>html2canvas</code> and <code>qrcode.react</code>, allowing participants to save tickets as offline images.</li>
+<li>Progressive optical decoding utilizing standard laptop webcams or mobile smartphone cameras without requiring native app installs.</li>
+<li>An arbitrary $N$-day attendance tracking model paired with an arbitrary $M$-round competitive elimination workflow.</li>
+<li>An automated Node.js cron microservice that continuously watches RTDB nodes and issues targeted push messages with idempotent deduplication keys.</li>
+</ol>
+<hr>
+<h1>CHAPTER 3 — REQUIREMENT ANALYSIS</h1>
+<h2>3.1 FUNCTIONAL REQUIREMENTS</h2>
+<p>Functional requirements define the core operational behaviors, features, and calculations executed by Eventra:</p>
+<ul>
+<li><strong>FR-01: Master Authorization &amp; Event Creation</strong>: The system must require a valid master approval key (<code>VITE_APPROVAL_KEY</code>) before permitting the creation of any new event. Upon verification, the organizer specifies a unique alphanumeric <code>eventId</code> and password.</li>
+<li><strong>FR-02: Cryptographic Password Hashing</strong>: The system must hash organizer passwords client-side using the Web Crypto API (SHA-256) before transmission to the database. Plain-text passwords must never be stored.</li>
+<li><strong>FR-03: Event Parameter Configuration</strong>: Organizers must be able to configure: Event Name, Description, Venue/Mode, Date &amp; Time, Registration Deadline, Minimum Team Size, Maximum Team Size, Registration Open/Closed toggle, Maximum Team Capacity, Number of Event Days ($N$), Active Event Day, Number of Competition Rounds ($M$), Active Competition Round, and optional Payment Link.</li>
+<li><strong>FR-04: Atomic Capacity Allocation</strong>: When a participant registers, the system must execute an atomic transaction on the event&#39;s <code>currentTeams</code> counter. If <code>currentTeams</code> meets or exceeds <code>maxTeams</code>, the registration must be rejected atomically.</li>
+<li><strong>FR-05: Team Registration with Leader &amp; Member Hierarchy</strong>: The system must collect team name, leader name, optional leader email, roll number, college, and branch. It must dynamically permit the addition of members up to the configured maximum, providing toggle shortcuts to inherit the leader&#39;s college and branch.</li>
+<li><strong>FR-06: Unique Team ID &amp; QR Token Generation</strong>: The system must generate a deterministic, padded Team ID in the format <code>{eventId}-T{XX}</code> (e.g., <code>hackathon2026-T01</code>) and encode the optical token string <code>{eventId}|{teamId}</code> into a high-density 2D QR code.</li>
+<li><strong>FR-07: Boarding Pass &amp; Visual Ticket Virtualization</strong>: The system must render a vintage-tech boarding pass ticket containing event metadata, passenger name, captain name, departure date, and QR stub. The ticket must be downloadable as a PNG file via HTML5 canvas virtualization.</li>
+<li><strong>FR-08: Optical Camera-Based QR Attendance Scanning</strong>: The organizer interface must access the device&#39;s web camera, decode scanned QR codes at 10 FPS, parse the <code>{eventId}|{teamId}</code> payload, and query the database in real time.</li>
+<li><strong>FR-09: Multi-Day Member-Level Attendance Recording</strong>: When a team QR code is scanned, the system must display all team members with active checkboxes, defaulting to present. Upon confirmation, the system must record attendance under the active day node (<code>dayAttendance/{currentDay}</code>) with millisecond timestamps.</li>
+<li><strong>FR-10: Duplicate Attendance Rejection</strong>: If a team has already been marked present for the active day, the scanner must reject the check-in attempt, trigger a warning haptic/visual alert, and display previous check-in details.</li>
+<li><strong>FR-11: Multi-Round Competition Qualification</strong>: Organizers must be able to view eligible teams for each round ($1$ to $M$) and toggle qualification status. In the final round ($M$), organizers must be able to assign podium positions (1st, 2nd, 3rd place) with mutual exclusivity enforcement.</li>
+<li><strong>FR-12: Real-Time Public Leaderboard &amp; Gamified Elimination</strong>: The system must provide a public leaderboard displaying team ranks, qualification pills, and round progression dots. When an eliminated team is searched, the system must trigger a GTA V-inspired &quot;WASTED&quot; audio-visual overlay. When winners are declared, an interactive reveal button must trigger celebration confetti.</li>
+<li><strong>FR-13: Push Notification Subscription &amp; Categorization</strong>: The system must prompt visitors and registrants for notification permissions via the W3C Push API and FCM. Tokens must be categorized under <code>fcmTokens/visitors</code> or associated directly with registered teams under <code>fcmTokens/teams/{eventId}/{teamCode}</code>.</li>
+<li><strong>FR-14: Scheduled Background Notification Dispatch</strong>: The notification server must run cron jobs to evaluate registration deadlines (sending alerts at 24 hours and 1 hour remaining), detect registration status toggles, detect round qualification changes, and detect winner placements.</li>
+<li><strong>FR-15: Filtered Analytical CSV Export</strong>: The system must generate and trigger browser downloads of sanitized CSV files for: (a) All Event Details, (b) Round-Qualified Teams for any round $R$, and (c) Present Teams for any day $D$.</li>
+</ul>
+<h2>3.2 NON-FUNCTIONAL REQUIREMENTS</h2>
+<ul>
+<li><strong>NFR-01: Performance and Response Latency</strong>: Client UI interactions must render within 100 ms. Real-time database listener updates must propagate across connected clients in under 500 ms under standard broadband conditions.</li>
+<li><strong>NFR-02: Optical Scanning Throughput</strong>: The camera QR scanner must process and decode frames at a minimum rate of 10 frames per second (FPS), resolving valid tickets in under 1 second.</li>
+<li><strong>NFR-03: Security &amp; Session Isolation</strong>: Administrative routes (<code>/event-details</code>, <code>/dashboard</code>, <code>/scan</code>) must be protected by an authentication guard that verifies active <code>sessionStorage</code> tokens against the route&#39;s <code>eventId</code>. Cross-event access must be denied.</li>
+<li><strong>NFR-04: Resilience &amp; Retry Logic</strong>: All asynchronous database writes and reads must pass through a recursive exponential backoff mechanism (<code>withRetry</code>), retrying transient network failures up to 2 times before throwing an error.</li>
+<li><strong>NFR-05: Idempotence in Notifications</strong>: The notification server must guarantee that duplicate notifications are never dispatched for the same event deadline or qualification update by maintaining an idempotent deduplication hash log (<code>notificationLog</code>).</li>
+<li><strong>NFR-06: Cross-Browser Compatibility</strong>: The frontend must function consistently across Chromium-based browsers (Chrome, Edge, Brave), Mozilla Firefox, and Apple Safari on both desktop and mobile form factors.</li>
+<li><strong>NFR-07: Usability and Visual Polish</strong>: The user interface must employ a coherent design language with high contrast, legible typography (JetBrains Mono, Crimson Pro), ambient background lighting, and responsive layouts across screens from 360px to 4K.</li>
+</ul>
+<h2>3.3 HARDWARE REQUIREMENTS</h2>
+<h3>3.3.1 Client / End-User Devices</h3>
+<ul>
+<li><strong>Processor</strong>: Dual-Core 1.8 GHz or higher (Intel Core i3/AMD Ryzen 3 or ARM equivalent on mobile).</li>
+<li><strong>RAM</strong>: Minimum 2 GB (4 GB recommended for smooth camera canvas stream processing).</li>
+<li><strong>Display</strong>: Minimum resolution of $360 \times 640$ pixels for mobile; $1280 \times 720$ pixels for organizer dashboard.</li>
+<li><strong>Peripherals</strong>: Integrated or USB web camera capable of capturing video at 720p @ 15 FPS minimum (required only for scanning check-in desks).</li>
+</ul>
+<h3>3.3.2 Server / Hosting Environment</h3>
+<ul>
+<li><strong>Notification Server Runtime</strong>: Node.js runtime environment with minimum 512 MB RAM and 0.5 vCPU (standard free/starter tier on Render or equivalent PaaS).</li>
+<li><strong>Database Infrastructure</strong>: Google Cloud Firebase Realtime Database managed infrastructure.</li>
+</ul>
+<h2>3.4 SOFTWARE REQUIREMENTS</h2>
+<ul>
+<li><strong>Client Operating System</strong>: Windows 10/11, macOS 11+, Linux Ubuntu 20.04+, Android 10+, or iOS 16.4+.</li>
+<li><strong>Web Browser</strong>: Google Chrome 110+, Microsoft Edge 110+, Mozilla Firefox 115+, or Apple Safari 16.4+.</li>
+<li><strong>Server Runtime</strong>: Node.js version 18.0.0 or higher.</li>
+<li><strong>Package Manager</strong>: npm version 9.0.0 or higher.</li>
+<li><strong>Version Control</strong>: Git 2.34+.</li>
+</ul>
+<h2>3.5 DEVELOPMENT ENVIRONMENT</h2>
+<ul>
+<li><strong>Primary IDE</strong>: Visual Studio Code / Antigravity IDE.</li>
+<li><strong>Terminal &amp; Shell</strong>: PowerShell 7 on Windows / Bash on Linux.</li>
+<li><strong>Bundler &amp; Build Tool</strong>: Vite 8.0.4.</li>
+<li><strong>Compiler</strong>: TypeScript 6.0.2 with <code>tsconfig.app.json</code> and <code>tsconfig.node.json</code> configurations.</li>
+<li><strong>Linter</strong>: ESLint 9.39.4 with React Hooks and TypeScript plugins.</li>
+</ul>
+<h2>3.6 USER (PARTICIPANT) REQUIREMENTS</h2>
+<ul>
+<li>Access event details, guidelines, and rules via a shared link without creating an account.</li>
+<li>Complete registration forms with instantaneous validation of member limits.</li>
+<li>Save, view, and screenshot an airline-style digital boarding pass with an embedded QR code.</li>
+<li>Query their team status on the public leaderboard and receive visual confirmation of qualification or elimination.</li>
+<li>Opt into web push notifications with a single click to receive real-time schedule and qualification alerts.</li>
+</ul>
+<h2>3.7 ADMIN (ORGANIZER) REQUIREMENTS</h2>
+<ul>
+<li>Securely provision an event namespace using the institutional master approval key.</li>
+<li>Authenticate into the event-specific dashboard using hashed credentials.</li>
+<li>Adjust event parameters (dates, deadlines, day counts, round counts) at any point during event execution.</li>
+<li>Utilize a camera-based scanner to check in teams and record attendance per member per day.</li>
+<li>Advance qualifying teams across rounds and designate podium champions.</li>
+<li>Dispatch targeted push notifications to all teams, qualified round teams, or specific selected teams.</li>
+<li>Download verified attendance and qualification reports in Comma-Separated Values (CSV) format.</li>
+</ul>
+<h2>3.8 SYSTEM CONSTRAINTS</h2>
+<ul>
+<li><strong>Network Dependency</strong>: Firebase Realtime Database operations require an active internet connection; while <code>withRetry</code> handles temporary drops, prolonged offline operation is not supported.</li>
+<li><strong>Single Master Key</strong>: All events are provisioned using a single institutional master key (<code>VITE_APPROVAL_KEY</code>) embedded in the environment configuration.</li>
+<li><strong>Camera Lighting &amp; Focus</strong>: Optical QR decoding depends on ambient lighting conditions and physical camera focus quality.</li>
+</ul>
+<h2>3.9 OPERATIONAL ASSUMPTIONS</h2>
+<ul>
+<li>Organizers possess a modern smartphone or laptop with an operational camera for attendance scanning.</li>
+<li>Participants have internet access during registration and leaderboard queries.</li>
+<li>The hosting cloud provider (Firebase/Render) maintains an operational SLA $&gt; 99.5%$.</li>
+</ul>
+<h2>3.10 FEASIBILITY STUDY</h2>
+<h3>3.10.1 Technical Feasibility</h3>
+<p>The project utilizes proven, industry-standard technologies: React 19, Vite, TypeScript, Express, and Firebase. The optical QR scanner utilizes the well-established <code>html5-qrcode</code> library wrapping the native HTML5 Canvas and MediaDevices APIs. Push notifications leverage the W3C Push API and Firebase Cloud Messaging standard. All required APIs are mature, heavily documented, and natively supported across modern browsers. The project is technically viable.</p>
+<h3>3.10.2 Economic Feasibility</h3>
+<p>Eventra is engineered to operate entirely within free-tier cloud architectures during typical academic usage:</p>
+<ul>
+<li><strong>Frontend Hosting</strong>: Firebase Hosting provides a generous free tier (10 GB storage, 360 MB/day transfer), easily supporting an academic symposium.</li>
+<li><strong>Database</strong>: Firebase Realtime Database free Spark plan supports 1 GB stored data, 10 GB/month transfer, and 100 simultaneous connections.</li>
+<li><strong>Notification Server</strong>: Hosted on the free tier of cloud PaaS providers (such as Render), running on 512 MB containers.</li>
+<li><strong>Zero Software Licensing Costs</strong>: All frameworks, compilers, icons, and libraries are open-source under MIT or Apache 2.0 licenses. The economic feasibility is absolute.</li>
+</ul>
+<h3>3.10.3 Operational Feasibility</h3>
+<p>The operational workflow requires minimal user training. The participant registration form mirrors standard web forms. The optical scanner requires only pointing the device&#39;s camera at a printed or mobile screen QR code. The organizer dashboard provides intuitive tabbed interfaces with visual feedback, status badges, and haptic confirmations. The project is operationally feasible and intuitive.</p>
+<hr>
+<h1>CHAPTER 4 — SYSTEM ANALYSIS AND ARCHITECTURE</h1>
+<h2>4.1 SYSTEM OVERVIEW</h2>
+<p>Eventra is architected as a distributed, decoupled client-server system comprising three primary architectural layers:</p>
+<ol>
+<li><strong>Client Presentation Tier (SPA Frontend)</strong>: Developed with React 19, TypeScript, and Vite, delivering client-side routing, optical barcode decoding, canvas virtualization, and responsive UI components.</li>
+<li><strong>Persistence and Realtime Synchronization Tier (Firebase RTDB)</strong>: A managed cloud NoSQL database that synchronizes application state as a JSON document tree across all subscribed clients via bi-directional WebSockets.</li>
+<li><strong>Autonomous Background Worker Tier (Notification Microservice)</strong>: An Express and Node-cron service operating with Firebase Admin credentials, periodically inspecting database state, managing notification queues, and dispatching Web Push payloads via the FCM Gateway.</li>
+</ol>
+<h2>4.2 HIGH-LEVEL SYSTEM ARCHITECTURE</h2>
+<p>The high-level architecture separates user-driven read/write transactions from asynchronous background evaluation tasks. Participants and organizers interact directly with the client tier, which communicates with the Firebase Realtime Database over secure WebSockets (WSS). Concurrently, the independent Notification Server microservice establishes an administrative channel to the database, tracking scheduled deadlines and draining organizer broadcast queues.</p>
+<div class="mermaid-container"><div class="mermaid">
+graph TB
+    subgraph Client_Tier ["Client Presentation Tier (Browser / React 19)"]
+        UI_Home["Home Landing Page"]
+        UI_Reg["Registration Portal"]
+        UI_Ticket["Ticket / Boarding Pass"]
+        UI_Scan["Optical QR Scanner"]
+        UI_Dash["Organizer Dashboard"]
+        UI_Leader["Live Leaderboard"]
+        SW["FCM Service Worker (firebase-messaging-sw.js)"]
+    end
+
+    subgraph Firebase_Cloud ["Firebase Cloud Infrastructure"]
+        RTDB[("Firebase Realtime Database (RTDB)")]
+        FCM_GW["Firebase Cloud Messaging (FCM) Gateway"]
+        Hosting["Firebase Web Hosting"]
+    end
+
+    subgraph Backend_Microservice ["Notification Server (Node.js / Express / Render)"]
+        Cron_Reminder["Cron: Registration Reminders (1m)"]
+        Cron_Status["Cron: Registration Status Monitor (1m)"]
+        Cron_Qual["Cron: Qualification & Winners (2m)"]
+        Cron_Queue["Cron: Organizer Push Queue (30s)"]
+        Admin_SDK["Firebase Admin SDK Engine"]
+        Dedup_Engine["Deduplication Engine (notificationLog)"]
+    end
+
+    UI_Home --> Hosting
+    UI_Reg -- "Atomic write (runTransaction)" --> RTDB
+    UI_Ticket -- "Read team details" --> RTDB
+    UI_Scan -- "Verify & update attendance" --> RTDB
+    UI_Dash -- "Manage rounds / days / queue push" --> RTDB
+    UI_Leader -- "Real-time WebSocket listener" --> RTDB
+
+    RTDB <--> Admin_SDK
+    Cron_Reminder --> Admin_SDK
+    Cron_Status --> Admin_SDK
+    Cron_Qual --> Admin_SDK
+    Cron_Queue --> Admin_SDK
+    Admin_SDK --> Dedup_Engine
+    Admin_SDK -- "Dispatch FCM message" --> FCM_GW
+
+    FCM_GW -- "Deliver Web Push" --> SW
+    SW -- "Trigger System Toast" --> Client_Tier
+
+</div></div>
+<h2>4.3 COMPONENT-LEVEL ARCHITECTURE</h2>
+<p>At the component level, Eventra is organized into functional modules with clear separation of concerns:</p>
+<ul>
+<li><strong>Presentation Components</strong>: Reusable interface widgets (<code>Button</code>, <code>Input</code>, <code>Textarea</code>, <code>GlassCard</code>, <code>StatusBadge</code>, <code>LoadingSpinner</code>, <code>Skeleton</code>).</li>
+<li><strong>Domain Components</strong>: Business-logic components (<code>TicketCard</code>, <code>QRCodeDisplay</code>, <code>QRScanner</code>, <code>CSVDownloadModal</code>, <code>NotificationPanel</code>, <code>NotificationPrompt</code>).</li>
+<li><strong>State Management &amp; Routing</strong>: <code>AuthContext</code> providing session state, <code>ProtectedRoute</code> preventing unauthorized navigation, and <code>BrowserRouter</code> handling client-side URLs.</li>
+<li><strong>Utility Subsystems</strong>: <code>fcm.ts</code> (push client), <code>haptics.ts</code> (hardware vibration), <code>db-retry.ts</code> (fault tolerance), and <code>utils.ts</code> (cryptographic hashing, CSV formatting).</li>
+</ul>
+<h2>4.4 FRONTEND ARCHITECTURAL FLOW</h2>
+<p>When a user navigates to an Eventra route:</p>
+<ol>
+<li><code>main.tsx</code> mounts the application wrapped in <code>AuthProvider</code>.</li>
+<li><code>AuthContext</code> initializes by reading cached organizer sessions from browser <code>sessionStorage</code>.</li>
+<li><code>App.tsx</code> configures the routing table. Public routes (<code>/</code>, <code>/create-event</code>, <code>/organizer-login</code>, <code>/register/:eventId</code>, <code>/ticket/:eventId/:teamId</code>, <code>/leaderboard/:eventId</code>) render directly.</li>
+<li>Protected routes (<code>/event-details/:eventId</code>, <code>/dashboard/:eventId</code>, <code>/scan/:eventId</code>) pass through <code>ProtectedRoute</code>. If the session is missing or the authenticated <code>eventId</code> does not match the URL parameter, the route redirects to <code>/organizer-login</code>.</li>
+<li>Pages establish active listeners on specific database paths using the Firebase Web SDK (<code>ref</code>, <code>get</code>, <code>onValue</code>), keeping the UI synchronized with zero page reloads.</li>
+</ol>
+<h2>4.5 BACKEND &amp; NOTIFICATION SERVER ARCHITECTURE</h2>
+<p>The backend operates as an event-driven scheduler. Rather than requiring HTTP polling from the client, the backend autonomously evaluates database state using <code>node-cron</code>:</p>
+<ul>
+<li><strong>Every 30 seconds</strong>: Scans <code>notificationQueue/{eventId}</code> for manual broadcasts queued by organizers. Upon detection, it queries target device tokens and transmits FCM messages.</li>
+<li><strong>Every 60 seconds</strong>: Evaluates event registration deadlines, triggering 24-hour and 1-hour countdown push notifications to registered teams.</li>
+<li><strong>Every 60 seconds</strong>: Detects registration status transitions (<code>registrationOpen</code> toggles or deadline extensions) and broadcasts schedule updates.</li>
+<li><strong>Every 120 seconds</strong>: Compares in-memory qualification caches against RTDB states to identify newly qualified teams or podium winners, dispatching congratulatory push alerts.</li>
+<li><strong>Daily at 3:00 AM</strong>: Purges deduplication records older than 7 days from <code>notificationLog</code>.</li>
+</ul>
+<h2>4.6 DATABASE SYNCHRONIZATION TOPOLOGY</h2>
+<p>Eventra uses a hierarchical JSON document store in Firebase Realtime Database. The database topology operates via persistent WebSockets over TLS:</p>
+<ul>
+<li>When an organizer scans a QR code, an <code>update()</code> operation writes to <code>events/{eventId}/teams/{teamCode}/dayAttendance/{currentDay}</code>.</li>
+<li>Firebase servers push the delta payload to all connected clients listening on <code>events/{eventId}/teams</code>.</li>
+<li>The live dashboard immediately increments the &quot;Day $D$ Present&quot; counter, updates the attendance progress bar, and alters the status badge from red (&quot;Absent&quot;) to green (&quot;Present&quot;) without manual page refreshing.</li>
+</ul>
+<h2>4.7 API ARCHITECTURE AND DATA CONTRACTS</h2>
+<p>Communication between client, database, and backend follows strict schema contracts:</p>
+<ul>
+<li><strong>Client to RTDB</strong>: Direct Firebase Web SDK operations (<code>get</code>, <code>set</code>, <code>update</code>, <code>runTransaction</code>).</li>
+<li><strong>Client to Backend</strong>: Optional HTTP REST endpoints (<code>POST /notify</code>) using JSON payloads.</li>
+<li><strong>Backend to RTDB</strong>: Administrative privileged queries via Firebase Admin SDK.</li>
+<li><strong>Backend to FCM</strong>: HTTP/2 multiplexed socket connection to Google Cloud Messaging servers.</li>
+</ul>
+<h2>4.8 AUTHENTICATION &amp; CRYPTOGRAPHIC SESSION MODEL</h2>
+<p>Eventra implements an event-scoped cryptographic authentication architecture:</p>
+<ol>
+<li>During event creation, the organizer inputs a master <code>approvalKey</code> and an event password.</li>
+<li>The client checks <code>approvalKey === VITE_APPROVAL_KEY</code>.</li>
+<li>The password is fed to <code>crypto.subtle.digest(&#39;SHA-256&#39;, data)</code> using the Web Crypto API, producing a 64-character hexadecimal digest.</li>
+<li>Only this SHA-256 digest is persisted under <code>events/{eventId}/passwordHash</code>.</li>
+<li>During login, the entered password is hashed on the client and compared against the stored hash via <code>verifyPassword()</code>.</li>
+<li>Upon successful verification, <code>login(eventId)</code> writes <code>{ eventId }</code> into <code>sessionStorage</code> under the key <code>eventra_organizer_session</code>.</li>
+</ol>
+<div class="mermaid-container"><div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Organizer as Event Organizer
+    participant Client as React Client (OrganizerLogin)
+    participant Crypto as Web Crypto API (SubtleCrypto)
+    participant RTDB as Firebase Realtime Database
+    participant Session as Browser sessionStorage
+
+    Organizer->>Client: Enters eventId & password
+    Client->>RTDB: Query events/{eventId}/passwordHash
+    RTDB-->>Client: Returns stored SHA-256 hash
+    Client->>Crypto: hashPassword(password)
+    Crypto-->>Client: Returns 64-char hex digest
+    Client->>Client: verifyPassword(): Compare inputHash === storedHash
+    alt Password Matches
+        Client->>Session: setItem('eventra_organizer_session', { eventId })
+        Client-->>Organizer: Redirect to /dashboard/{eventId}
+    else Password Mismatch
+        Client-->>Organizer: Display "Incorrect password" error
+    end
+
+</div></div>
+<h2>4.9 AUTHORIZATION MATRIX</h2>
+<p>Authorization is enforced via client-side router guards and database key boundaries:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Resource / Route</th>
+<th align="left">Public Visitor</th>
+<th align="left">Registered Participant</th>
+<th align="left">Authenticated Organizer</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Landing Page (<code>/</code>)</td>
+<td align="left">Full Access</td>
+<td align="left">Full Access</td>
+<td align="left">Full Access</td>
+</tr>
+<tr>
+<td align="left">Create Event (<code>/create-event</code>)</td>
+<td align="left">Protected by Approval Key</td>
+<td align="left">Protected by Approval Key</td>
+<td align="left">Full Access</td>
+</tr>
+<tr>
+<td align="left">Team Registration (<code>/register/:id</code>)</td>
+<td align="left">Full Access</td>
+<td align="left">Full Access</td>
+<td align="left">Full Access</td>
+</tr>
+<tr>
+<td align="left">View Ticket (<code>/ticket/:id/:team</code>)</td>
+<td align="left">Full Access (Direct Link)</td>
+<td align="left">Full Access (Direct Link)</td>
+<td align="left">Full Access</td>
+</tr>
+<tr>
+<td align="left">Leaderboard (<code>/leaderboard/:id</code>)</td>
+<td align="left">Full Access</td>
+<td align="left">Full Access</td>
+<td align="left">Full Access</td>
+</tr>
+<tr>
+<td align="left">Event Settings (<code>/event-details/:id</code>)</td>
+<td align="left">Access Denied</td>
+<td align="left">Access Denied</td>
+<td align="left">Authenticated Organizer Only</td>
+</tr>
+<tr>
+<td align="left">Dashboard (<code>/dashboard/:id</code>)</td>
+<td align="left">Access Denied</td>
+<td align="left">Access Denied</td>
+<td align="left">Authenticated Organizer Only</td>
+</tr>
+<tr>
+<td align="left">QR Scanner (<code>/scan/:id</code>)</td>
+<td align="left">Access Denied</td>
+<td align="left">Access Denied</td>
+<td align="left">Authenticated Organizer Only</td>
+</tr>
+<tr>
+<td align="left">Database Write (<code>events/{id}/teams</code>)</td>
+<td align="left">Registration Write</td>
+<td align="left">Registration Write</td>
+<td align="left">Full Administrative Access</td>
+</tr>
+</tbody></table>
+<h2>4.10 REQUEST-RESPONSE PROCESSING PIPELINE</h2>
+<p>For transactional operations (such as team registration):</p>
+<ol>
+<li><strong>Client Validation</strong>: Form inputs are validated against schema rules (email regex, team size min/max).</li>
+<li><strong>Duplicate Email Verification</strong>: The sanitized email key (<code>formatEmailForDb</code>) is checked under <code>events/{eventId}/registeredEmails/{emailKey}</code>.</li>
+<li><strong>Atomic Counter Lock</strong>: A transaction is dispatched to <code>events/{eventId}/eventSettings/currentTeams</code>. The database engine increments the counter atomically only if <code>count &lt; maxTeams</code>.</li>
+<li><strong>Team Record Provisioning</strong>: With the returned counter value, the deterministic Team ID (<code>{eventId}-T{XX}</code>) is generated, and full team metadata is written.</li>
+<li><strong>Token Association</strong>: If the user opted into notifications, the device&#39;s FCM registration token is indexed under <code>fcmTokens/teams/{eventId}/{teamCode}</code>.</li>
+<li><strong>Navigation</strong>: Client redirects to the confirmation page (<code>/registration-success</code>).</li>
+</ol>
+<h2>4.11 END-TO-END DATA FLOW DIAGRAMS</h2>
+<h3>4.11.1 Level 0 DFD (Context Diagram)</h3>
+<div class="mermaid-container"><div class="mermaid">
+graph TD
+    User["Participant / Team Leader"]
+    Org["Event Organizer"]
+    EventraSystem["EVENTRA SYSTEM (React SPA + Cloud RTDB + Cron Server)"]
+    FCMService["Firebase Cloud Messaging Service"]
+
+    User -- "Registration form, Team Data, Opt-in Token" --> EventraSystem
+    EventraSystem -- "Digital Boarding Pass, Leaderboard Rankings, Push Alerts" --> User
+
+    Org -- "Approval Key, Event Settings, Password, QR Scans, Broadcasts" --> EventraSystem
+    EventraSystem -- "Real-time Stats, Attendance Rosters, CSV Reports" --> Org
+
+    EventraSystem -- "Notification Payload & Device Tokens" --> FCMService
+    FCMService -- "Push Notification Deliveries" --> User
+
+</div></div>
+<h3>4.11.2 Level 1 DFD (Decomposed Functional Modules)</h3>
+<div class="mermaid-container"><div class="mermaid">
+graph TD
+    User["Team Leader"]
+    Org["Organizer"]
+    
+    subgraph Eventra_Core ["Eventra Operational Modules"]
+        P1["1.0 Event Setup & Auth"]
+        P2["2.0 Team Registration & Quota Control"]
+        P3["3.0 Ticket & QR Virtualization"]
+        P4["4.0 Optical Attendance Verification"]
+        P5["5.0 Tournament Qualification & Leaderboard"]
+        P6["6.0 Push Notification Engine"]
+    end
+
+    D1[("events/{eventId}/details")]
+    D2[("events/{eventId}/eventSettings")]
+    D3[("events/{eventId}/teams")]
+    D4[("fcmTokens/teams")]
+    D5[("notificationQueue")]
+    D6[("notificationLog")]
+
+    Org -- "Approval Key & Password" --> P1
+    P1 -- "Store Details & Hashes" --> D1
+    P1 -- "Configure Days/Rounds/Cap" --> D2
+
+    User -- "Submit Team Roster" --> P2
+    P2 -- "Atomic Lock Quota" --> D2
+    P2 -- "Write Team Record" --> D3
+    P2 -- "Index FCM Token" --> D4
+    P2 -- "Trigger Ticket Gen" --> P3
+
+    P3 -- "Render Canvas PNG" --> User
+
+    Org -- "Scan Team QR Code" --> P4
+    P4 -- "Read Team & Day History" --> D3
+    P4 -- "Write Day Attendance & Timestamp" --> D3
+
+    Org -- "Toggle Round Qual / Podium" --> P5
+    P5 -- "Update Qualifications" --> D3
+    P5 -- "Stream Rankings" --> User
+
+    Org -- "Queue Manual Broadcast" --> D5
+    P6 -- "Read Queue & Events" --> D5
+    P6 -- "Read Team Tokens" --> D4
+    P6 -- "Check Dedup Hash" --> D6
+    P6 -- "Dispatch Web Push" --> User
+
+</div></div>
+<h2>4.12 OVERALL SYSTEM OPERATIONAL WORKFLOW</h2>
+<p>The overall operational lifecycle of an event in Eventra proceeds through five sequential phases:</p>
+<ol>
+<li><strong>Provisioning Phase</strong>: The organizer authenticates with <code>APPROVAL_KEY</code>, sets the event identifier, defines password, and configures event schedule, days, and rounds.</li>
+<li><strong>Registration Phase</strong>: The registration link is shared. Participants register their teams. Quotas are enforced atomically. Boarding passes are generated and saved.</li>
+<li><strong>Check-In Phase</strong>: On event day, venue staff open <code>/scan/:eventId</code> on mobile or laptop browsers, scanning physical or screen-rendered QR codes. Attendance is recorded per member for the active day.</li>
+<li><strong>Competition Phase</strong>: As stages conclude, the organizer navigates to Dashboard $\rightarrow$ Qualified tab, advancing teams for the next round. The public leaderboard updates in real time. Eliminated team searches trigger the GTA V &quot;WASTED&quot; overlay.</li>
+<li><strong>Culmination &amp; Reporting Phase</strong>: Final podium rankings are assigned. Confetti celebration is revealed on the public leaderboard. The organizer downloads verified CSV analytical reports.</li>
+</ol>
+<hr>
+<h1>CHAPTER 5 — TECHNOLOGY STACK</h1>
+<h2>5.1 CORE PROGRAMMING LANGUAGES</h2>
+<ul>
+<li><strong>TypeScript (version ~6.0.2)</strong>: Primary programming language for the entire client application. TypeScript provides static typing, interface contracts (<code>types/index.ts</code>), compile-time error detection, and code refactoring safety.</li>
+<li><strong>JavaScript (ES2022 / Node.js CommonJS)</strong>: Utilized in the <code>notification-server</code> microservice for straightforward, dependency-free execution in Node.js runtime environments.</li>
+<li><strong>HTML5</strong>: Semantic document markup, native <code>&lt;canvas&gt;</code> rendering for QR and ticket virtualization, and camera media capture.</li>
+<li><strong>CSS3</strong>: Modern layout specifications including Flexbox, CSS Grid, custom properties (CSS variables), keyframe animations, and backdrop filters.</li>
+</ul>
+<h2>5.2 FRONTEND UI FRAMEWORK &amp; RUNTIME</h2>
+<ul>
+<li><strong>React (version ^19.2.4)</strong>: The core UI library. React 19 provides reactive component rendering, hooks (<code>useState</code>, <code>useEffect</code>, <code>useCallback</code>, <code>useRef</code>), and high-speed DOM reconciliation.</li>
+<li><strong>React DOM (version ^19.2.4)</strong>: Client-side DOM renderer executing within the browser root element (<code>createRoot</code>).</li>
+<li><strong>Vite (version ^8.0.4)</strong>: Next-generation frontend tooling and build orchestrator. Vite leverages native ES modules during development for instant Hot Module Replacement (HMR) and utilizes Rollup for optimized production bundling.</li>
+<li><strong>React Router DOM (version ^7.14.1)</strong>: Client-side routing engine managing URL navigation, dynamic path parameters (<code>:eventId</code>, <code>:teamId</code>), and declarative route protection (<code>ProtectedRoute</code>).</li>
+</ul>
+<h2>5.3 STYLING SYSTEM AND DESIGN PHILOSOPHY</h2>
+<ul>
+<li><strong>Tailwind CSS (version ^4.2.2)</strong>: Integrated via <code>@tailwindcss/vite</code>. Provides utility-first styling for structural layout and spacing.</li>
+<li><strong>Eventra Design System (<code>src/styles/eventra-shared.css</code> &amp; <code>src/index.css</code>)</strong>: A custom-crafted vintage-tech and luxury dark aesthetic utilizing:<ul>
+<li><em>Color Palette</em>: Background <code>#0a0a0f</code>, Surface <code>#1A1A1A</code>, Surface-2 <code>#242424</code>, Primary Gold <code>#C6A969</code>, Accent Gold <code>#D4AF37</code>, Success Green <code>#4ADE80</code>, Danger Red <code>#F87171</code>, Warning Yellow <code>#FBBF24</code>.</li>
+<li><em>Typography</em>: Google Fonts <code>Crimson Pro</code> (editorial serif for headings), <code>JetBrains Mono</code> (technical monospaced for metadata and data fields), and <code>DM Sans</code> / <code>Playfair Display</code>.</li>
+<li><em>Visual Effects</em>: Ambient radial glow orbs, subtle 44px grid patterns, glassmorphism cards with <code>backdrop-filter: blur(16px)</code>, and gold-trimmed borders.</li>
+</ul>
+</li>
+</ul>
+<h2>5.4 DATABASE TECHNOLOGY</h2>
+<ul>
+<li><strong>Firebase Realtime Database (Google Cloud)</strong>: Cloud-hosted NoSQL document database. Data is stored as a native JSON hierarchy and synchronized in real time across all connected clients via WebSockets over TLS. Chosen over traditional relational databases for its zero-server setup, millisecond data propagation, offline caching, and atomic transaction primitives.</li>
+<li><strong>Firebase Web SDK (version ^12.12.0)</strong>: Client-side library (<code>firebase/app</code>, <code>firebase/database</code>, <code>firebase/messaging</code>) used to interface directly with Firebase services from the React application.</li>
+</ul>
+<h2>5.5 BACKEND SERVER RUNTIME &amp; MICROSERVICES</h2>
+<ul>
+<li><strong>Node.js (Engine &gt;= 18.0.0)</strong>: Server-side JavaScript runtime executing the notification microservice.</li>
+<li><strong>Express (version ^4.21.2)</strong>: Minimalist HTTP server framework providing REST endpoints (<code>/</code>, <code>/status</code>, <code>/debug</code>, <code>/notify</code>) and CORS middleware.</li>
+<li><strong>Firebase Admin SDK (version ^13.0.2)</strong>: Privileged server SDK providing administrative access to Firebase RTDB and the Firebase Cloud Messaging engine without client-side permission restrictions.</li>
+<li><strong>node-cron (version ^3.0.3)</strong>: Pure JavaScript task scheduler executing recurring background cron expressions within the Node process.</li>
+<li><strong>cors (version ^2.8.5)</strong>: Cross-Origin Resource Sharing middleware enabling secure API invocation from the client web origin.</li>
+<li><strong>dotenv (version ^16.4.7)</strong>: Environment variable manager loading configuration from local <code>.env</code> files into <code>process.env</code>.</li>
+</ul>
+<h2>5.6 MESSAGING AND PUSH NOTIFICATION INFRASTRUCTURE</h2>
+<ul>
+<li><strong>Firebase Cloud Messaging (FCM)</strong>: Cross-platform messaging solution used to route push notifications to web clients.</li>
+<li><strong>W3C Web Push Protocol</strong>: Industry standard utilizing public key cryptography (VAPID keys) to authenticate server push messages to user agents.</li>
+<li><strong>Service Worker (<code>public/firebase-messaging-sw.js</code>)</strong>: Background browser worker script that intercepts push payloads when the web application is closed or minimized, rendering native operating system notifications.</li>
+</ul>
+<h2>5.7 PERIPHERAL AND AUXILIARY LIBRARIES</h2>
+<ul>
+<li><strong>html5-qrcode (version ^2.3.8)</strong>: Robust JavaScript library utilizing the browser&#39;s MediaDevices API to capture real-time camera video streams and decode 2D QR codes on the client CPU.</li>
+<li><strong>qrcode.react (version ^4.2.0)</strong>: React component rendering crisp SVG and HTML5 canvas 2D QR codes using client-side algorithms.</li>
+<li><strong>html2canvas (version ^1.4.1)</strong>: JavaScript library that reads the DOM structure of the boarding pass ticket and renders it into a downloadable HTML5 canvas element.</li>
+<li><strong>canvas-confetti (version ^1.9.4)</strong>: High-performance confetti particle simulator used during leaderboard podium reveals.</li>
+<li><strong>lucide-react (version ^1.8.0)</strong>: Iconography library providing lightweight SVG icons.</li>
+<li><strong>Web Vibration API (<code>navigator.vibrate</code>)</strong>: Native browser hardware API wrapped in <code>src/lib/haptics.ts</code> to provide tactile feedback patterns.</li>
+</ul>
+<h2>5.8 BUILD PIPELINE AND PACKAGE MANAGEMENT</h2>
+<ul>
+<li><strong>npm</strong>: Package dependency resolution and script execution (<code>dev</code>, <code>build</code>, <code>lint</code>, <code>preview</code>).</li>
+<li><strong>TypeScript Compiler (<code>tsc -b</code>)</strong>: Validates type safety across the application and checks configuration constraints before bundling.</li>
+<li><strong>Rollup (via Vite)</strong>: Compiles TypeScript, tree-shakes dead code, minifies CSS/JS assets, and splits vendor chunks into the <code>/dist</code> directory.</li>
+</ul>
+<h2>5.9 HOSTING AND CLOUD DEPLOYMENT INFRASTRUCTURE</h2>
+<ul>
+<li><strong>Firebase Hosting</strong>: High-speed Content Delivery Network (CDN) providing SSL-secured global distribution of static frontend assets, with single-page application URL rewriting configured in <code>firebase.json</code>.</li>
+<li><strong>Render Cloud Application Platform</strong>: Platform-as-a-Service (PaaS) executing the persistent Node.js notification microservice container.</li>
+</ul>
+<hr>
+<h1>CHAPTER 6 — SYSTEM DESIGN</h1>
+<h2>6.1 ARCHITECTURAL DESIGN PRINCIPLES</h2>
+<p>Eventra is engineered around five fundamental software architecture principles:</p>
+<ol>
+<li><strong>Decoupled Responsibilities</strong>: Client rendering, database synchronization, and background scheduled processing exist as independent subsystems.</li>
+<li><strong>Offline Resilience &amp; Graceful Degradation</strong>: Core ticket viewing functions utilize local canvas caching. Database operations incorporate exponential backoff retry wrappers. Unsupported features (such as haptics or push on older browsers) fail gracefully without breaking UI execution.</li>
+<li><strong>Zero-Poll Reactive Synchronization</strong>: Rather than issuing recurring HTTP GET requests, the client establishes bi-directional WebSocket subscriptions to RTDB nodes.</li>
+<li><strong>Stateless Administrative Sessions</strong>: Administrative authorization is maintained client-side in <code>sessionStorage</code> and validated route-by-route, eliminating heavy server-side session stores.</li>
+<li><strong>Idempotent Background Workers</strong>: Every scheduled notification worker computes a unique deterministic hash key before dispatching messages, guaranteeing zero duplicate alerts.</li>
+</ol>
+<h2>6.2 MODULE BREAKDOWN</h2>
+<p>The codebase is structured into cohesive modules:</p>
+<div class="mermaid-container"><div class="mermaid">
+graph TD
+    subgraph Frontend_App ["Eventra Frontend Application (src/)"]
+        M_Auth["Auth Subsystem<br>(AuthContext, ProtectedRoute)"]
+        M_Events["Event Setup & Config<br>(CreateEvent, EventDetails)"]
+        M_Reg["Registration Engine<br>(Register, RegistrationSuccess)"]
+        M_Ticket["Boarding Pass Engine<br>(Ticket, TicketCard, QRCodeDisplay)"]
+        M_Scan["Optical Scanner<br>(ScanAttendance, QRScanner)"]
+        M_Leader["Leaderboard & Podium<br>(Leaderboard, SuccessAnimation)"]
+        M_Dash["Admin Dashboard<br>(Dashboard, CSVDownloadModal)"]
+        M_PushClient["FCM Push Client<br>(fcm.ts, NotificationPrompt)"]
+    end
+
+    subgraph Notification_Microservice ["Notification Server (notification-server/)"]
+        N_Init["Server Entry & Admin SDK<br>(index.js, lib/firebase.js)"]
+        N_Dispatch["Dispatch Engine<br>(lib/notifications.js)"]
+        N_Dedup["Deduplication Engine<br>(lib/dedup.js)"]
+        N_Jobs["Cron Workers<br>(jobs/*.js)"]
+    end
+
+    M_Events --> M_Auth
+    M_Dash --> M_Auth
+    M_Scan --> M_Auth
+    M_Reg --> M_Ticket
+    M_Dash --> M_Scan
+    M_Dash --> M_Leader
+    M_Dash --> M_PushClient
+
+    N_Jobs --> N_Dedup
+    N_Jobs --> N_Dispatch
+    N_Init --> N_Jobs
+
+</div></div>
+<h2>6.3 COMPONENT HIERARCHY AND INTERACTION MODEL</h2>
+<p>The React component tree follows a clean, single-root layout structure:</p>
+<ul>
+<li><strong><code>Layout</code></strong>: Renders the persistent ambient background, subtle animated grid lines, fixed <code>Navbar</code>, floating <code>NotificationPrompt</code> toast listener, and page footer.</li>
+<li><strong><code>Outlet</code></strong>: Dynamically mounts the active page view depending on browser route.</li>
+<li><strong>Atomic Subcomponents</strong>: Pages compose smaller widgets (<code>Input</code>, <code>Button</code>, <code>GlassCard</code>) that inherit styles from the shared design system.</li>
+</ul>
+<h2>6.4 CRYPTOGRAPHIC HASHING AND SECURITY SUBSYSTEM</h2>
+<p>Organizer passwords are never transmitted in cleartext or evaluated on a backend server. Instead, Eventra leverages the browser&#39;s native <strong>Web Crypto API</strong>:</p>
+<p>$$\text{hash} = \text{SubtleCrypto.digest}(\text{&quot;SHA-256&quot;}, \text{TextEncoder().encode}(\text{password}))$$</p>
+<p>The resulting 256-bit hash buffer is converted into a 64-character lowercase hexadecimal string. During authentication, the same algorithm is applied to user input and verified using strict string equality.</p>
+<h2>6.5 QR ENCODING AND OPTICAL SCANNING PIPELINE</h2>
+<p>The ticketing pipeline encodes a pipe-delimited payload:</p>
+<p>$$\text{QR Payload} = \text{eventId} \parallel \text{&quot;|&quot;} \parallel \text{teamId}$$</p>
+<p>For example: <code>hackathon2026|hackathon2026-T01</code>.</p>
+<div class="mermaid-container"><div class="mermaid">
+graph TD
+    A["Camera Capture (720p @ 10 FPS)"] --> B["HTML5 QR Scanner Engine"]
+    B --> C{"Decoded text has delimiter '|'?"}
+    C -- No --> D["Trigger Error: Invalid QR Format"]
+    C -- Yes --> E["Extract: scannedEventId & scannedTeamId"]
+    E --> F{"scannedEventId === activeEventId?"}
+    F -- No --> G["Trigger Error: Belongs to Different Event"]
+    F -- Yes --> H["Query RTDB: events/{eventId}/teams/{teamCode}"]
+    H --> I{"Team Record Exists?"}
+    I -- No --> J["Trigger Error: Team Not Found"]
+    I -- Yes --> K{"Already Marked for currentDay?"}
+    K -- Yes --> L["Render 'Duplicate Check-In' Screen + Previous Stats"]
+    K -- No --> M["Render Member Checklist (Default All Present)"]
+    M --> N["Organizer Confirms Check-In"]
+    N --> O["Atomic DB Update: dayAttendance/{day} & Timestamp"]
+    O --> P["Trigger Haptic Success + Sound + Animated Checkmark"]
+
+</div></div>
+<h2>6.6 MULTI-DAY ATTENDANCE STATE MACHINE</h2>
+<p>Unlike standard ticketing systems that treat attendance as a single boolean, Eventra implements an arbitrary $N$-day attendance matrix:</p>
+<ul>
+<li>Each team maintains a <code>dayAttendance</code> dictionary keyed by day index string (<code>&quot;1&quot;</code>, <code>&quot;2&quot;</code>, <code>&quot;3&quot;</code>, etc.).</li>
+<li>Each entry stores:<pre><code class="language-json">{
+  &quot;marked&quot;: true,
+  &quot;markedAt&quot;: 1740920000000,
+  &quot;members&quot;: [
+    { &quot;name&quot;: &quot;Alice&quot;, &quot;present&quot;: true, &quot;rollNumber&quot;: &quot;21CS01&quot; },
+    { &quot;name&quot;: &quot;Bob&quot;, &quot;present&quot;: false, &quot;rollNumber&quot;: &quot;21CS02&quot; }
+  ]
+}
+</code></pre>
+</li>
+<li>The organizer advances <code>currentDay</code> via the Event Details stepper. The scanner dynamically binds to <code>currentDay</code>. Day 1 attendance automatically mirrors to the legacy <code>attendanceMarked</code> boolean for backwards compatibility.</li>
+</ul>
+<h2>6.7 MULTI-ROUND QUALIFICATION AND ELIMINATION ENGINE</h2>
+<p>Eventra models multi-stage tournaments using an arbitrary $M$-round state machine:</p>
+<ul>
+<li>Under each team record, a <code>qualifications</code> map stores round states:<pre><code class="language-json">{
+  &quot;1&quot;: true,
+  &quot;2&quot;: true,
+  &quot;3&quot;: false
+}
+</code></pre>
+</li>
+<li><strong>Round Advancement Logic</strong>: In Round $R &gt; 1$, the Dashboard displays only teams that were qualified in Round $R - 1$.</li>
+<li><strong>Final Round &amp; Podium Mode</strong>: In the final round ($M$), the UI transitions from qualification toggles to podium assignment medals: 1st Place (🥇), 2nd Place (🥈), 3rd Place (🥉). Assigning a position automatically clears it from any previous holder, enforcing strict uniqueness.</li>
+</ul>
+<h2>6.8 ASYNCHRONOUS NOTIFICATION QUEUE AND DEDUPLICATION</h2>
+<p>To enable manual broadcasts without direct FCM server credentials on the client, Eventra uses a decoupled queue pattern:</p>
+<ol>
+<li><strong>Client Enqueues</strong>: The organizer composes an announcement on the Dashboard. The client writes an entry into <code>notificationQueue/{eventId}/{pushId}</code> containing title, message body, target filter (<code>all_teams</code>, <code>qualified_round</code>, <code>winners</code>, <code>specific_teams</code>), and timestamp.</li>
+<li><strong>Worker Drains</strong>: Every 30 seconds, <code>organizer-push.js</code> queries unprocessed queue entries.</li>
+<li><strong>Recipient Resolution</strong>: The worker queries <code>events/{eventId}/teams</code> to resolve device tokens matching the target criteria.</li>
+<li><strong>Execution &amp; Marking</strong>: The worker transmits messages via the FCM Admin SDK and updates the queue entry with <code>processed: true</code>, timestamp, and dispatched counts.</li>
+<li><strong>Deduplication Engine</strong>: Scheduled cron jobs compute an idempotent key:
+$$\text{dedupKey} = \text{eventId} \parallel \text{&quot;_&quot;} \parallel \text{type} \parallel \text{&quot;_&quot;} \parallel \text{deadline/timestamp}$$
+The worker checks <code>notificationLog/{dedupKey}</code> before sending. If the key exists, execution is skipped, completely eliminating duplicate notifications.</li>
+</ol>
+<h2>6.9 ERROR HANDLING AND FAULT TOLERANCE STRATEGY</h2>
+<p>Eventra incorporates fault tolerance at multiple levels:</p>
+<ul>
+<li><strong><code>withRetry</code> Database Wrapper</strong>: Wraps asynchronous operations in recursive exponential backoff:<pre><code class="language-typescript">// Retries failed reads/writes with incremental delay (delay * 1.5)
+await withRetry(() =&gt; get(ref(db, path)), 2, 1000);
+</code></pre>
+</li>
+<li><strong>Camera Fallback</strong>: If browser camera permissions are denied or hardware fails, an integrated manual alphanumeric lookup field allows instant check-in.</li>
+<li><strong>Offline Banner</strong>: An event listener monitors <code>window.navigator.onLine</code>, rendering warning alerts when internet connectivity is severed.</li>
+<li><strong>Stale Token Eviction</strong>: If the FCM gateway returns <code>registration-token-not-registered</code>, the notification server automatically scrubs the invalid token from the database, preventing wasted resources on subsequent runs.</li>
+</ul>
+<h2>6.10 SCALABILITY AND PERFORMANCE CONSIDERATIONS</h2>
+<ul>
+<li><strong>Data Pruning</strong>: Dedup logs older than 7 days are automatically removed by daily cron workers, preventing infinite database bloat.</li>
+<li><strong>Lightweight Document Queries</strong>: Targeted queries inspect specific child nodes (e.g., <code>events/{id}/details/eventName</code>) rather than loading monolithic branches.</li>
+<li><strong>Client-Side Virtualization</strong>: Static assets, ticket cards, and QR images are generated entirely within the client runtime using HTML5 Canvas, offloading server CPU loads.</li>
+</ul>
+<hr>
+<h1>CHAPTER 7 — DATABASE DESIGN</h1>
+<h2>7.1 DATABASE PARADIGM AND TECHNOLOGY SELECTION</h2>
+<p>Eventra utilizes the <strong>Firebase Realtime Database (RTDB)</strong>, a cloud-hosted NoSQL document database. Unlike traditional relational database management systems (RDBMS) that require fixed table schemas, joins, and database migrations, RTDB stores all data as a single hierarchical JSON document tree.</p>
+<p>RTDB was selected for this project due to four decisive architectural advantages:</p>
+<ol>
+<li><strong>Bi-directional WebSocket Synchronization</strong>: Clients do not poll; the database engine pushes deltas to listening clients with sub-500ms latency.</li>
+<li><strong>Native Atomic Transaction API</strong>: The <code>runTransaction()</code> method guarantees atomic updates on counters, crucial for eliminating race conditions during registration rushes.</li>
+<li><strong>Zero Maintenance Infrastructure</strong>: Fully managed by Google Cloud, eliminating database administration, connection pooling, and operating system patching.</li>
+<li><strong>Hierarchical Document Modeling</strong>: Naturally represents collegiate event hierarchies where teams, members, and day records nest logically within specific event nodes.</li>
+</ol>
+<h2>7.2 REALTIME DATABASE ARCHITECTURE</h2>
+<p>The database schema is organized under four top-level root nodes:</p>
+<ul>
+<li><code>/events</code>: Contains all event namespaces, details, settings, and team records.</li>
+<li><code>/fcmTokens</code>: Contains device push registration tokens indexed for fast broadcast retrieval.</li>
+<li><code>/notificationQueue</code>: Holds asynchronous push broadcast requests queued by organizers.</li>
+<li><code>/notificationLog</code>: Stores idempotent dispatch records preventing duplicate cron notifications.</li>
+</ul>
+<h2>7.3 COMPLETE NODE HIERARCHY AND DATA DICTIONARY</h2>
+<pre><code>root
+├── events
+│   └── {eventId}
+│       ├── createdAt: number (ms since epoch)
+│       ├── passwordHash: string (64-char hex SHA-256)
+│       ├── teamCount: number (legacy total counter)
+│       ├── registeredEmails
+│       │   └── {sanitizedEmail}: true
+│       ├── details
+│       │   ├── eventName: string
+│       │   ├── description: string
+│       │   ├── dateTime: string (ISO / datetime-local)
+│       │   ├── venue: string
+│       │   ├── teamSizeMin: number
+│       │   ├── teamSizeMax: number
+│       │   └── paymentLink: string | null
+│       ├── eventSettings
+│       │   ├── currentTeams: number (atomic counter)
+│       │   ├── maxTeams: number | null
+│       │   ├── registrationOpen: boolean
+│       │   ├── registrationDeadline: string | null (ISO string)
+│       │   ├── numberOfDays: number (total event days)
+│       │   ├── currentDay: number (active day index)
+│       │   ├── numberOfRounds: number (total competition rounds)
+│       │   └── currentRound: number (active round index)
+│       └── teams
+│           └── {teamCode}  (e.g., &quot;T01&quot;)
+│               ├── teamId: string (e.g., &quot;hackathon2026-T01&quot;)
+│               ├── teamName: string
+│               ├── leader: string
+│               ├── email: string | null
+│               ├── createdAt: number (ms timestamp)
+│               ├── attendanceMarked: boolean (Day 1 legacy flag)
+│               ├── position: number | null (1, 2, or 3 for winners)
+│               ├── fcmToken: string | null
+│               ├── fcmTokenUpdatedAt: number | null
+│               ├── qualifications
+│               │   └── {roundNumber}: boolean
+│               ├── dayAttendance
+│               │   └── {dayNumber}
+│               │       ├── marked: boolean
+│               │       ├── markedAt: number (ms timestamp)
+│               │       └── members: Array&lt;MemberAttendanceObject&gt;
+│               └── members: Array&lt;MemberObject&gt;
+├── fcmTokens
+│   ├── visitors
+│   │   └── {sanitizedTokenKey}
+│   │       ├── token: string
+│   │       ├── userAgent: string
+│   │       ├── platform: string
+│   │       ├── language: string
+│   │       ├── createdAt: object (serverTimestamp)
+│   │       └── updatedAt: object (serverTimestamp)
+│   └── teams
+│       └── {eventId}
+│           └── {teamCode}
+│               ├── token: string
+│               ├── teamId: string
+│               ├── teamName: string
+│               ├── leader: string
+│               ├── email: string
+│               ├── eventId: string
+│               └── updatedAt: object (serverTimestamp)
+├── notificationQueue
+│   └── {eventId}
+│       └── {pushId}
+│           ├── title: string
+│           ├── body: string
+│           ├── target: &quot;all_teams&quot; | &quot;qualified_round&quot; | &quot;winners&quot; | &quot;specific_teams&quot;
+│           ├── targetRound: number | null
+│           ├── teamCodes: Array&lt;string&gt; | null
+│           ├── url: string
+│           ├── createdAt: number
+│           ├── processed: boolean
+│           ├── processedAt: number | null
+│           └── result: { sent: number, failed: number }
+└── notificationLog
+    └── {sanitizedDedupKey}
+        ├── key: string
+        ├── sentAt: number
+        ├── type: string
+        ├── eventId: string
+        └── eventName: string
+</code></pre>
+<h3>7.3.1 Data Dictionary: <code>events/{eventId}/details</code></h3>
+<table>
+<thead>
+<tr>
+<th align="left">Field Name</th>
+<th align="left">Data Type</th>
+<th align="left">Nullable</th>
+<th align="left">Description / Constraints</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>eventName</code></td>
+<td align="left">String</td>
+<td align="left">No</td>
+<td align="left">Full display title of the event (e.g., &quot;National Hackathon 2026&quot;).</td>
+</tr>
+<tr>
+<td align="left"><code>description</code></td>
+<td align="left">String</td>
+<td align="left">No</td>
+<td align="left">Detailed explanation of event themes, guidelines, and rules.</td>
+</tr>
+<tr>
+<td align="left"><code>dateTime</code></td>
+<td align="left">String</td>
+<td align="left">Yes</td>
+<td align="left">ISO string representation of the event scheduled commencement date and time.</td>
+</tr>
+<tr>
+<td align="left"><code>venue</code></td>
+<td align="left">String</td>
+<td align="left">No</td>
+<td align="left">Physical campus hall, auditorium, lab number, or online meeting link.</td>
+</tr>
+<tr>
+<td align="left"><code>teamSizeMin</code></td>
+<td align="left">Number</td>
+<td align="left">No</td>
+<td align="left">Minimum allowable team members including leader (Integer $\ge 1$).</td>
+</tr>
+<tr>
+<td align="left"><code>teamSizeMax</code></td>
+<td align="left">Number</td>
+<td align="left">No</td>
+<td align="left">Maximum allowable team members including leader (Integer $\ge teamSizeMin$).</td>
+</tr>
+<tr>
+<td align="left"><code>paymentLink</code></td>
+<td align="left">String</td>
+<td align="left">Yes</td>
+<td align="left">Optional URL to external payment gateway (e.g., Razorpay, UPI).</td>
+</tr>
+</tbody></table>
+<h3>7.3.2 Data Dictionary: <code>events/{eventId}/eventSettings</code></h3>
+<table>
+<thead>
+<tr>
+<th align="left">Field Name</th>
+<th align="left">Data Type</th>
+<th align="left">Nullable</th>
+<th align="left">Description / Constraints</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>currentTeams</code></td>
+<td align="left">Number</td>
+<td align="left">No</td>
+<td align="left">Total accepted teams counter, mutated strictly via <code>runTransaction()</code>.</td>
+</tr>
+<tr>
+<td align="left"><code>maxTeams</code></td>
+<td align="left">Number</td>
+<td align="left">Yes</td>
+<td align="left">Upper bound capacity limit. If null, registrations are uncapped.</td>
+</tr>
+<tr>
+<td align="left"><code>registrationOpen</code></td>
+<td align="left">Boolean</td>
+<td align="left">No</td>
+<td align="left">Administrative master switch to open or pause registration intake.</td>
+</tr>
+<tr>
+<td align="left"><code>registrationDeadline</code></td>
+<td align="left">String</td>
+<td align="left">Yes</td>
+<td align="left">ISO timestamp when registration automatically closes.</td>
+</tr>
+<tr>
+<td align="left"><code>numberOfDays</code></td>
+<td align="left">Number</td>
+<td align="left">No</td>
+<td align="left">Total days attendance will be tracked (Default 1, Integer $\ge 1$).</td>
+</tr>
+<tr>
+<td align="left"><code>currentDay</code></td>
+<td align="left">Number</td>
+<td align="left">No</td>
+<td align="left">Active day index ($1 \le currentDay \le numberOfDays$).</td>
+</tr>
+<tr>
+<td align="left"><code>numberOfRounds</code></td>
+<td align="left">Number</td>
+<td align="left">No</td>
+<td align="left">Total competition stages for qualification (Default 1, Integer $\ge 1$).</td>
+</tr>
+<tr>
+<td align="left"><code>currentRound</code></td>
+<td align="left">Number</td>
+<td align="left">No</td>
+<td align="left">Active competition round ($1 \le currentRound \le numberOfRounds$).</td>
+</tr>
+</tbody></table>
+<h3>7.3.3 Data Dictionary: <code>events/{eventId}/teams/{teamCode}</code></h3>
+<table>
+<thead>
+<tr>
+<th align="left">Field Name</th>
+<th align="left">Data Type</th>
+<th align="left">Nullable</th>
+<th align="left">Description / Constraints</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>teamId</code></td>
+<td align="left">String</td>
+<td align="left">No</td>
+<td align="left">Unique deterministic Team identifier: <code>{eventId}-T{XX}</code>.</td>
+</tr>
+<tr>
+<td align="left"><code>teamName</code></td>
+<td align="left">String</td>
+<td align="left">No</td>
+<td align="left">Team display name (e.g., &quot;Project Nexus&quot;).</td>
+</tr>
+<tr>
+<td align="left"><code>leader</code></td>
+<td align="left">String</td>
+<td align="left">No</td>
+<td align="left">Full name of the primary team leader.</td>
+</tr>
+<tr>
+<td align="left"><code>email</code></td>
+<td align="left">String</td>
+<td align="left">Yes</td>
+<td align="left">Leader contact email address.</td>
+</tr>
+<tr>
+<td align="left"><code>createdAt</code></td>
+<td align="left">Number</td>
+<td align="left">No</td>
+<td align="left">Millisecond timestamp when record was committed.</td>
+</tr>
+<tr>
+<td align="left"><code>attendanceMarked</code></td>
+<td align="left">Boolean</td>
+<td align="left">No</td>
+<td align="left">Legacy Day 1 attendance flag maintained for backward compatibility.</td>
+</tr>
+<tr>
+<td align="left"><code>position</code></td>
+<td align="left">Number</td>
+<td align="left">Yes</td>
+<td align="left">Podium placement: 1 (1st Place), 2 (2nd Place), 3 (3rd Place), or null.</td>
+</tr>
+<tr>
+<td align="left"><code>fcmToken</code></td>
+<td align="left">String</td>
+<td align="left">Yes</td>
+<td align="left">Firebase Cloud Messaging device registration token for Web Push.</td>
+</tr>
+<tr>
+<td align="left"><code>fcmTokenUpdatedAt</code></td>
+<td align="left">Number</td>
+<td align="left">Yes</td>
+<td align="left">Timestamp when the device token was updated.</td>
+</tr>
+<tr>
+<td align="left"><code>members</code></td>
+<td align="left">Array</td>
+<td align="left">No</td>
+<td align="left">Array of <code>TeamMember</code> objects (<code>name</code>, <code>rollNumber</code>, <code>college</code>, <code>branch</code>, <code>present</code>).</td>
+</tr>
+<tr>
+<td align="left"><code>qualifications</code></td>
+<td align="left">Map</td>
+<td align="left">Yes</td>
+<td align="left">Key-value pairs mapping round string to boolean (<code>{&quot;1&quot;: true, &quot;2&quot;: false}</code>).</td>
+</tr>
+<tr>
+<td align="left"><code>dayAttendance</code></td>
+<td align="left">Map</td>
+<td align="left">Yes</td>
+<td align="left">Key-value pairs mapping day index to <code>DayAttendance</code> records.</td>
+</tr>
+</tbody></table>
+<h2>7.4 ENTITY-RELATIONSHIP (ER) / TREE MODEL</h2>
+<div class="mermaid-container"><div class="mermaid">
+erDiagram
+    EVENT ||--o{ TEAM : contains
+    EVENT ||--|| EVENT_DETAILS : defines
+    EVENT ||--|| EVENT_SETTINGS : controls
+    EVENT ||--o{ REGISTERED_EMAIL : enforces_uniqueness
+    EVENT ||--o{ NOTIFICATION_QUEUE_ENTRY : queues
+    TEAM ||--|{ TEAM_MEMBER : includes
+    TEAM ||--o{ DAY_ATTENDANCE : tracks
+    TEAM ||--o{ ROUND_QUALIFICATION : evaluates
+    TEAM ||--o| TEAM_FCM_TOKEN : associates
+
+    EVENT {
+        string eventId PK
+        string passwordHash
+        number createdAt
+        number teamCount
+    }
+
+    EVENT_DETAILS {
+        string eventName
+        string description
+        string dateTime
+        string venue
+        number teamSizeMin
+        number teamSizeMax
+        string paymentLink
+    }
+
+    EVENT_SETTINGS {
+        number currentTeams
+        number maxTeams
+        boolean registrationOpen
+        string registrationDeadline
+        number numberOfDays
+        number currentDay
+        number numberOfRounds
+        number currentRound
+    }
+
+    TEAM {
+        string teamCode PK
+        string teamId
+        string teamName
+        string leader
+        string email
+        number position
+        boolean attendanceMarked
+        number createdAt
+    }
+
+    TEAM_MEMBER {
+        string name
+        string rollNumber
+        string college
+        string branch
+        boolean present
+    }
+
+    DAY_ATTENDANCE {
+        string dayIndex PK
+        boolean marked
+        number markedAt
+    }
+
+    ROUND_QUALIFICATION {
+        string roundIndex PK
+        boolean qualified
+    }
+
+</div></div>
+<h2>7.5 KEY NORMALIZATION, KEYS, AND SANITIZATION RULES</h2>
+<p>Firebase Realtime Database node keys possess strict character restrictions. A key string cannot contain <code>.</code>, <code>#</code>, <code>$</code>, <code>[</code>, <code>]</code>, <code>:</code>, or <code>/</code>. Violating these rules throws runtime exceptions. Eventra implements strict sanitization algorithms:</p>
+<h3>7.5.1 Email Key Sanitization (<code>formatEmailForDb</code>)</h3>
+<p>Emails contain periods (<code>.</code>). The helper function normalizes email keys by substituting periods with commas:</p>
+<pre><code class="language-typescript">export const formatEmailForDb = (email: string): string =&gt; {
+  return email.toLowerCase().replace(/\./g, &#39;,&#39;);
+};
+</code></pre>
+<p><em>Example</em>: <code>alice.developer@college.edu</code> $\rightarrow$ <code>alice,developer@college,edu</code>.</p>
+<h3>7.5.2 FCM Token Sanitization (<code>sanitizeTokenKey</code> / <code>sanitizeKey</code>)</h3>
+<p>Cryptographic push registration tokens contain colons, slashes, and periods. The sanitization utility transforms all illegal characters to underscores:</p>
+<pre><code class="language-typescript">export function sanitizeTokenKey(token: string): string {
+  return token.replace(/[.#$[\]/:]/g, &#39;_&#39;);
+}
+</code></pre>
+<h2>7.6 ATOMIC TRANSACTIONS AND CONCURRENCY HANDLING</h2>
+<p>In standard database systems, updating a team count involves a read-modify-write cycle:
+$$\text{Read } C \rightarrow \text{Compute } C + 1 \rightarrow \text{Write } C + 1$$
+If two participants register simultaneously at capacity $C = 99$ with maximum limit $100$, both clients read $99$, compute $100$, and write $100$. As a result, 101 teams are registered, violating the institutional quota constraint.</p>
+<p>Eventra resolves this race condition using Firebase atomic transactions (<code>runTransaction</code>):</p>
+<pre><code class="language-typescript">const result = await runTransaction(ref(db, `events/${eventId}/eventSettings/currentTeams`), (current) =&gt; {
+  const count = current || 0;
+  if (eventSettings?.maxTeams &amp;&amp; count &gt;= eventSettings.maxTeams) {
+    return; // Aborts transaction atomically
+  }
+  return count + 1; // Commits increment atomically
+});
+
+if (!result.committed) {
+  setErrors({ submit: &#39;Registration full. No more teams can be accepted.&#39; });
+  return;
+}
+</code></pre>
+<p>If another transaction commits concurrently, the Firebase engine automatically restarts the transaction with the updated value, guaranteeing mathematical consistency.</p>
+<h2>7.7 CRUD OPERATIONS ANALYSIS</h2>
+<ul>
+<li><strong>Create</strong>:<ul>
+<li>Provision event: <code>set(ref(db, &#39;events/&#39; + eventId), { passwordHash, createdAt, teamCount: 0 })</code>.</li>
+<li>Register team: Atomic counter increment followed by multi-path batch <code>set()</code>.</li>
+<li>Queue broadcast: <code>push(ref(db, &#39;notificationQueue/&#39; + eventId), payload)</code>.</li>
+</ul>
+</li>
+<li><strong>Read</strong>:<ul>
+<li>Real-time listener: <code>onValue(ref(db, path), callback)</code>.</li>
+<li>One-time read: <code>get(ref(db, path))</code> wrapped in <code>withRetry()</code>.</li>
+</ul>
+</li>
+<li><strong>Update</strong>:<ul>
+<li>Update settings: <code>update(ref(db, &#39;events/&#39; + eventId + &#39;/eventSettings&#39;), changes)</code>.</li>
+<li>Mark attendance: <code>update(ref(db, &#39;events/&#39; + eventId + &#39;/teams/&#39; + code), { &#39;dayAttendance/1/marked&#39;: true })</code>.</li>
+<li>Qualify round: <code>update(ref(db, &#39;events/&#39; + eventId + &#39;/teams/&#39; + code), { &#39;qualifications/2&#39;: true })</code>.</li>
+</ul>
+</li>
+<li><strong>Delete</strong>:<ul>
+<li>Revoke FCM token: <code>db.ref(&#39;fcmTokens/teams/&#39; + eventId + &#39;/&#39; + code).remove()</code>.</li>
+<li>Clean dedup record: <code>db.ref(&#39;notificationLog/&#39; + key).remove()</code>.</li>
+</ul>
+</li>
+</ul>
+<h2>7.8 DATA VALIDATION RULES AND INTEGRITY CONSTRAINTS</h2>
+<ul>
+<li><strong>Event ID</strong>: Enforced via regex: <code>/^[a-z0-9]+(-[a-z0-9]+)*$/</code> with minimum 3 and maximum 40 characters (<code>isValidEventId</code>).</li>
+<li><strong>Team Size Bounds</strong>: Dynamically constrained such that:
+$$1 \le \text{teamSizeMin} \le \text{teamSizeMax} \le 10$$
+$$\text{teamSizeMin} \le (\text{members.length} + 1) \le \text{teamSizeMax}$$</li>
+<li><strong>Email Uniqueness</strong>: Enforced by writing to an index table <code>events/{eventId}/registeredEmails/{emailKey}</code>.</li>
+</ul>
+<h2>7.9 DATABASE SECURITY AND ACCESS RULES</h2>
+<p>Database security is structured around event scoping. In development and managed production setups, security rules enforce:</p>
+<ul>
+<li>Administrative nodes require matching session contexts.</li>
+<li>Write access to <code>registeredEmails</code> and <code>teams</code> allows creation only when non-existent (preventing overwrite of existing teams).</li>
+<li>Server microservice uses administrative Service Account credentials, bypassing security rule bottlenecks on background tasks.</li>
+</ul>
+<hr>
+<h1>CHAPTER 8 — BACKEND DEVELOPMENT</h1>
+<h2>8.1 BACKEND OVERVIEW</h2>
+<p>The backend tier of Eventra is implemented as an independent, autonomous microservice located in the <code>notification-server/</code> directory. It is purpose-built to execute background tasks that cannot reliably run on client browsers, such as scheduled deadline monitoring, stale push token cleanup, and automated notification queue dispatch.</p>
+<p>Unlike typical monolithic backends that manage full database CRUD, Eventra&#39;s notification server is architected as an <strong>Event-Driven Scheduled Background Worker</strong>. It operates alongside the client SPA and leverages the privileged <strong>Firebase Admin SDK</strong> to interface with the Realtime Database and Google&#39;s Firebase Cloud Messaging gateway.</p>
+<h2>8.2 SERVER INITIALIZATION AND EXPRESS CONFIGURATION</h2>
+<p>The main entry point is <code>notification-server/index.js</code>. It initializes an Express server instance on the port defined by <code>process.env.PORT</code> (defaulting to 3001).</p>
+<p>Key configuration features include:</p>
+<ul>
+<li><strong>CORS Middleware</strong>: Configured to permit requests from any origin with support for <code>GET</code>, <code>POST</code>, and <code>OPTIONS</code> preflight checks.</li>
+<li><strong>JSON Body Parser</strong>: Configured via <code>express.json()</code> to parse incoming notification dispatch payloads.</li>
+<li><strong>Boot Diagnostics</strong>: Measures server start timestamp (<code>startTime</code>) to report uptime metrics on health endpoints.</li>
+<li><strong>Cron Initialization</strong>: Triggers <code>startCronJobs()</code> immediately after the HTTP listener binds successfully.</li>
+</ul>
+<h2>8.3 MIDDLEWARE IMPLEMENTATION</h2>
+<ul>
+<li><strong>CORS Handling</strong>:<pre><code class="language-javascript">app.use(cors({
+  origin: &#39;*&#39;,
+  methods: [&#39;GET&#39;, &#39;POST&#39;, &#39;OPTIONS&#39;],
+  allowedHeaders: [&#39;Content-Type&#39;, &#39;Authorization&#39;],
+}));
+app.options(&#39;*&#39;, cors());
+</code></pre>
+</li>
+<li><strong>Job Execution Wrapper (<code>wrapJob</code>)</strong>: Every cron job function is wrapped in an execution supervisor that tracks total run counts, logs timestamps, and traps unhandled exceptions without crashing the Express server:<pre><code class="language-javascript">function wrapJob(name, jobFn) {
+  return async () =&gt; {
+    try {
+      cronStatus[name].runs++;
+      cronStatus[name].lastRun = new Date().toISOString();
+      await jobFn();
+    } catch (err) {
+      cronStatus[name].errors++;
+      console.error(`[Cron] Job &quot;${name}&quot; failed:`, err.message);
+    }
+  };
+}
+</code></pre>
+</li>
+</ul>
+<h2>8.4 FIREBASE ADMIN SDK SERVER-SIDE INTEGRATION</h2>
+<p>Server-side authentication with Firebase is managed by <code>notification-server/lib/firebase.js</code>. To guarantee deployment flexibility across local development machines and cloud PaaS environments (like Render), the service account credentials locator implements a robust four-tier resolution hierarchy (<code>getServiceAccount()</code>):</p>
+<ol>
+<li><strong>Local File Detection</strong>: Checks for candidate filenames (<code>serviceAccountKey.json</code>, <code>service-account.json</code>) in the server directory or workspace root.</li>
+<li><strong>Path Environment Variable</strong>: Checks <code>FIREBASE_SERVICE_ACCOUNT_PATH</code> or <code>GOOGLE_APPLICATION_CREDENTIALS</code>.</li>
+<li><strong>Raw String / Base64 Variable</strong>: Inspects <code>FIREBASE_SERVICE_ACCOUNT</code>, dynamically detecting whether the content is raw JSON or Base64-encoded JSON.</li>
+<li><strong>Individual Environment Variables</strong>: Synthesizes credentials from <code>FIREBASE_PROJECT_ID</code>, <code>FIREBASE_CLIENT_EMAIL</code>, and <code>FIREBASE_PRIVATE_KEY</code>.</li>
+</ol>
+<p>Upon credential parsing, the Admin SDK initializes:</p>
+<pre><code class="language-javascript">admin.initializeApp({
+  databaseURL: process.env.FIREBASE_DATABASE_URL,
+  credential: admin.credential.cert(serviceAccount),
+});
+</code></pre>
+<h2>8.5 NOTIFICATION DISPATCH ENGINE</h2>
+<p>The core notification dispatch logic resides in <code>notification-server/lib/notifications.js</code>. It exposes high-level targeting functions that construct Web Push payloads and deliver them through the Firebase Cloud Messaging API (<code>admin.messaging().send(message)</code>).</p>
+<h3>8.5.1 Single Token Dispatch (<code>sendToToken</code>)</h3>
+<p>Constructs a standards-compliant FCM message containing both standard notification fields and <code>webpush</code> options (icon, badge, link, data).</p>
+<h3>8.5.2 Stale Token Eviction Algorithm</h3>
+<p>When an FCM message send attempt fails, the engine analyzes the resulting error code. If the code indicates an invalid or expired token (<code>messaging/registration-token-not-registered</code>, <code>messaging/invalid-registration-token</code>):</p>
+<ol>
+<li>The token is marked invalid.</li>
+<li><code>cleanTeamToken(eventId, teamCode)</code> is invoked.</li>
+<li>The invalid token is scrubbed from both <code>fcmTokens/teams/{eventId}/{teamCode}</code> and <code>events/{eventId}/teams/{teamCode}/fcmToken</code>.</li>
+<li>The internal <code>totalCleaned</code> counter increments.</li>
+</ol>
+<h3>8.5.3 Target Filtering Functions</h3>
+<ul>
+<li><code>sendToEventTeams(eventId, payload)</code>: Iterates over all registered teams under <code>fcmTokens/teams/{eventId}/</code>.</li>
+<li><code>sendToSpecificTeams(eventId, teamCodes, payload)</code>: Sends notifications strictly to an array of specified team codes.</li>
+<li><code>sendToQualifiedTeams(eventId, round, payload)</code>: Inspects <code>events/{eventId}/teams</code>, filters teams where <code>qualifications[round] === true</code>, and dispatches push alerts.</li>
+<li><code>sendToWinnerTeams(eventId, payload)</code>: Filters teams where <code>position &gt; 0</code> (1st, 2nd, 3rd place) and delivers victory notifications.</li>
+</ul>
+<h2>8.6 DEDUPLICATION LOGGING SUBSYSTEM</h2>
+<p>Automated background cron jobs execute at high frequencies (every 1 to 2 minutes). Without synchronization, a cron job evaluating a deadline condition would fire redundant push notifications every minute.</p>
+<p>The deduplication subsystem in <code>notification-server/lib/dedup.js</code> resolves this:</p>
+<ul>
+<li><strong><code>hasBeenSent(key)</code></strong>: Checks if an entry exists at <code>notificationLog/{sanitizedKey}</code>.</li>
+<li><strong><code>markAsSent(key, metadata)</code></strong>: Writes an audit record containing <code>sentAt</code>, <code>key</code>, and metadata.</li>
+<li><strong>Dynamic Key Generation</strong>: When an organizer changes an event deadline, the deadline ISO string is embedded directly in the deduplication key:
+$$\text{dedupKey} = \text{eventId} \parallel \text{&quot;_reg_closing_24h_&quot;} \parallel \text{registrationDeadline}$$
+If the deadline is modified, the key hash changes automatically, allowing fresh reminders to fire for the new deadline schedule.</li>
+<li><strong><code>clearForEvent(eventId, type)</code></strong>: Programmatically purges deduplication records when deadlines are extended.</li>
+<li><strong><code>cleanupOldRecords(daysOld)</code></strong>: Purges audit logs older than 7 days daily at 3:00 AM.</li>
+</ul>
+<h2>8.7 SCHEDULED CRON JOBS ARCHITECTURE</h2>
+<p>The server registers five recurring tasks using <code>node-cron</code>:</p>
+<div class="mermaid-container"><div class="mermaid">
+graph TD
+    subgraph Schedulers ["node-cron Schedulers"]
+        J1["registrationReminders<br>(* * * * * — Every minute)"]
+        J2["registrationStatus<br>(* * * * * — Every minute)"]
+        J3["qualificationNotifications<br>(*/2 * * * * — Every 2 minutes)"]
+        J4["organizerPush<br>(*/30 * * * * * — Every 30 seconds)"]
+        J5["dedupCleanup<br>(0 3 * * * — Daily at 3:00 AM)"]
+    end
+
+    J1 -->|"Check 24h & 1h deadline window"| D_Remind["Dispatch Deadline Reminders"]
+    J2 -->|"Detect Open->Closed or Date changes"| D_Status["Dispatch Schedule Alerts"]
+    J3 -->|"Detect Qualification / Winner changes"| D_Qual["Dispatch Congratulatory Alerts"]
+    J4 -->|"Drain notificationQueue"| D_Queue["Dispatch Broadcast Messages"]
+    J5 -->|"Purge logs older than 7 days"| D_Clean["Clean notificationLog"]
+
+</div></div>
+<h3>8.7.1 Job 1: Registration Reminders (<code>jobs/registration-reminders.js</code>)</h3>
+<ul>
+<li><strong>Frequency</strong>: Every minute (<code>* * * * *</code>).</li>
+<li><strong>Logic</strong>: Iterates over all events where <code>registrationOpen === true</code> and a valid <code>registrationDeadline</code> exists.</li>
+<li><strong>Window Tolerance</strong>: Evaluates if current time is within $\pm 2$ minutes of either the <strong>24-hour mark</strong> ($86,400,000 \text{ ms}$) or the <strong>1-hour mark</strong> ($3,600,000 \text{ ms}$) before deadline passage.</li>
+<li><strong>Dispatch</strong>: Sends push reminders to all registered teams with direct links to the registration page.</li>
+</ul>
+<h3>8.7.2 Job 2: Registration Status Monitor (<code>jobs/registration-status.js</code>)</h3>
+<ul>
+<li><strong>Frequency</strong>: Every minute (<code>* * * * *</code>).</li>
+<li><strong>Logic</strong>: Maintains an in-memory state cache (<code>stateCache</code>) per event tracking <code>registrationOpen</code>, <code>registrationDeadline</code>, and <code>deadlinePassed</code>.</li>
+<li><strong>Transitions Detected</strong>:<ul>
+<li><em>Status Toggle</em>: Detects when an organizer manually closes registration, broadcasting <code>Registration Closed</code>.</li>
+<li><em>Deadline Modification</em>: Detects when an organizer extends a deadline, clears existing reminder dedup records, and broadcasts <code>Schedule Update: Deadline Extended</code>.</li>
+<li><em>Deadline Passage</em>: Detects the exact minute a deadline passes, broadcasting <code>Registration Closed</code>.</li>
+</ul>
+</li>
+</ul>
+<h3>8.7.3 Job 3: Qualification Notifications (<code>jobs/qualification-notifications.js</code>)</h3>
+<ul>
+<li><strong>Frequency</strong>: Every 2 minutes (<code>*/2 * * * *</code>).</li>
+<li><strong>Logic</strong>: Maintains in-memory caches of team qualifications (<code>qualCache</code>) and winner positions (<code>winnerCache</code>).</li>
+<li><strong>Triggers</strong>:<ul>
+<li><em>Winner Placement</em>: Detects when a team is assigned position 1, 2, or 3, broadcasting personalized victory notifications (e.g., &quot;🏆 Congratulations on 1st Place!&quot;).</li>
+<li><em>Stage Advancement</em>: Detects when a team&#39;s qualification status flips from <code>false</code> to <code>true</code> for any round, dispatching celebratory advancement notifications.</li>
+</ul>
+</li>
+</ul>
+<h3>8.7.4 Job 4: Organizer-Queued Push Worker (<code>jobs/organizer-push.js</code>)</h3>
+<ul>
+<li><strong>Frequency</strong>: Every 30 seconds (<code>*/30 * * * * *</code>).</li>
+<li><strong>Logic</strong>: Inspects <code>notificationQueue/{eventId}/</code>.</li>
+<li><strong>Execution</strong>: Drains unprocessed queue items, routes payloads to the appropriate targeting handler (<code>all_teams</code>, <code>qualified_round</code>, <code>winners</code>, <code>specific_teams</code>), marks items as <code>processed: true</code>, and logs delivery success/failure counts.</li>
+</ul>
+<h2>8.8 MANUAL BROADCAST &amp; WEBHOOK ENDPOINTS</h2>
+<p>In addition to background cron workers, the server exposes HTTP endpoints:</p>
+<ul>
+<li><code>POST /notify</code>: Accepts a JSON payload (<code>{ eventId, title, body, target, targetRound, teamCodes, url }</code>) to trigger an immediate manual push broadcast outside the cron loop.</li>
+</ul>
+<h2>8.9 COMPLETE BACKEND API ENDPOINTS TABLE</h2>
+<table>
+<thead>
+<tr>
+<th align="left">Method</th>
+<th align="left">Route</th>
+<th align="left">Authentication Required</th>
+<th align="left">Request Body / Params</th>
+<th align="left">Expected Response</th>
+<th align="left">Error Responses</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>GET</strong></td>
+<td align="left"><code>/</code></td>
+<td align="left">None</td>
+<td align="left">None</td>
+<td align="left">Service info, version, uptime, cron run statistics</td>
+<td align="left">500 on internal failure</td>
+</tr>
+<tr>
+<td align="left"><strong>GET</strong></td>
+<td align="left"><code>/status</code></td>
+<td align="left">None</td>
+<td align="left">None</td>
+<td align="left">Notification counts (<code>totalSent</code>, <code>totalFailed</code>, <code>totalCleaned</code>), cron status map</td>
+<td align="left">500 on internal failure</td>
+</tr>
+<tr>
+<td align="left"><strong>GET</strong></td>
+<td align="left"><code>/debug</code></td>
+<td align="left">None</td>
+<td align="left">None</td>
+<td align="left">Service account status, database URL, RTDB connection health (<code>.info/connected</code>)</td>
+<td align="left">500 on internal failure</td>
+</tr>
+<tr>
+<td align="left"><strong>POST</strong></td>
+<td align="left"><code>/notify</code></td>
+<td align="left">Secret / Origin</td>
+<td align="left">JSON: <code>eventId</code>, <code>title</code>, <code>body</code>, <code>target</code>, <code>targetRound</code>, <code>teamCodes</code>, <code>url</code></td>
+<td align="left">JSON: <code>{ success: true, sent: N, failed: M }</code></td>
+<td align="left">400 (Missing fields), 500 (Dispatch failure)</td>
+</tr>
+</tbody></table>
+<h2>8.10 ERROR HANDLING AND PROCESS RECOVERY</h2>
+<ul>
+<li><strong>Database Disconnection Handling</strong>: Database operations use asynchronous promises with catch blocks. If RTDB connectivity drops, cron runs log a warning and retry on the subsequent scheduled cycle.</li>
+<li><strong>Uncaught Exception Resilience</strong>: Process-level unhandled rejections are caught in <code>wrapJob</code>, preventing Node process termination.</li>
+</ul>
+<hr>
+<h1>CHAPTER 9 — FRONTEND DEVELOPMENT</h1>
+<h2>9.1 FRONTEND OVERVIEW AND UI DESIGN SYSTEM</h2>
+<p>The frontend of Eventra is constructed as a modern, high-speed Single Page Application (SPA). The design philosophy balances the visual elegance of luxury typography with the technical precision required for intense hackathon environments.</p>
+<p>Key aesthetic characteristics include:</p>
+<ul>
+<li><strong>Vintage Tech &amp; Ambient Luxury Dark Theme</strong>: Dark slate canvas (<code>#080810</code>, <code>#0a0a0f</code>) layered with gold accents (<code>#C6A969</code>, <code>#D4AF37</code>) and subtle green presence indicators (<code>#4ADE80</code>).</li>
+<li><strong>Glassmorphism &amp; Depth</strong>: Translucent content cards featuring <code>backdrop-filter: blur(16px)</code> and delicate $1\text{px}$ gold-tinted borders (<code>rgba(198,169,105,0.15)</code>).</li>
+<li><strong>Curated Font Pairing</strong>: <code>Crimson Pro</code> serif for distinguished headings paired with <code>JetBrains Mono</code> for data tables, codes, and metrics.</li>
+<li><strong>Skeleton Shimmer Loading</strong>: Instead of abrupt loading spinners, content-matching animated skeletons (<code>Skeleton.tsx</code>) preserve spatial layout while data streams in from the cloud.</li>
+</ul>
+<h2>9.2 APPLICATION DIRECTORY STRUCTURE</h2>
+<p>The frontend codebase is organized cleanly within the <code>src/</code> directory:</p>
+<pre><code>src/
+├── assets/                  # Static graphic assets (hero.png, logos)
+├── components/              # Reusable UI widgets &amp; domain components
+│   ├── Button.tsx           # Standard button with variants (primary, secondary, danger, ghost)
+│   ├── CSVDownloadModal.tsx # Multi-option analytical CSV export modal
+│   ├── GlassCard.tsx        # Translucent glassmorphism container
+│   ├── Input.tsx            # Form input with validation error states
+│   ├── Layout.tsx           # Base page wrapper with ambient lighting &amp; footer
+│   ├── LoadingSpinner.tsx   # Custom circular loading spinner
+│   ├── Navbar.tsx           # Fixed navigation header with route highlights
+│   ├── NotificationPanel.tsx# Organizer push broadcast compose console
+│   ├── NotificationPrompt.tsx# Foreground in-app push notification toast listener
+│   ├── ProtectedRoute.tsx   # Route authentication guard
+│   ├── QRCodeDisplay.tsx    # Canvas 2D QR rendering and download widget
+│   ├── QRScanner.tsx        # Camera optical barcode scanning engine
+│   ├── Skeleton.tsx         # Layout-matching shimmer loading placeholders
+│   ├── StatusBadge.tsx      # Presence badges (Present / Absent / Pending)
+│   ├── SuccessAnimation.tsx # Checkmark scale-in animation
+│   ├── Textarea.tsx         # Multi-line text entry field
+│   └── TicketCard.tsx       # Printable luxury boarding pass component
+├── context/
+│   └── AuthContext.tsx      # Organizer session context backed by sessionStorage
+├── lib/
+│   ├── constants.ts         # Global app constants &amp; APPROVAL_KEY binding
+│   ├── db-retry.ts          # Fault-tolerant exponential backoff retry helper
+│   ├── fcm.ts               # Client-side Firebase Cloud Messaging &amp; token logic
+│   ├── firebase.ts          # Client Firebase App &amp; RTDB initialization
+│   ├── haptics.ts           # Hardware vibration feedback patterns
+│   └── utils.ts             # Cryptographic SHA-256, formatting, CSV builders
+├── pages/
+│   ├── CreateEvent.tsx      # Provision new event with approval key
+│   ├── Dashboard.tsx        # Central organizer command dashboard
+│   ├── EventDetails.tsx     # Configure days, rounds, dates, deadlines
+│   ├── Home.tsx             # Interactive public landing page &amp; features showcase
+│   ├── Leaderboard.tsx      # Public tournament leaderboard &amp; GTA V overlay
+│   ├── OrganizerLogin.tsx   # Event authentication login portal
+│   ├── Register.tsx         # Participant team registration portal
+│   ├── RegistrationSuccess.tsx # Confirmation screen with boarding pass
+│   ├── ScanAttendance.tsx   # Multi-day optical QR check-in camera tool
+│   └── Ticket.tsx           # Standalone public boarding pass view
+├── styles/
+│   └── eventra-shared.css   # Keyframe animations, utility pills, custom inputs
+├── types/
+│   └── index.ts             # Complete TypeScript data model interfaces
+├── App.css                  # Component-specific stylesheet
+├── App.tsx                  # Client router definition and route guards
+├── index.css                # Base Tailwind theme, color variables, utility classes
+└── main.tsx                 # React application root mounting
+</code></pre>
+<h2>9.3 CLIENT-SIDE ROUTING AND NAVIGATION</h2>
+<p>Client routing is powered by <strong>React Router DOM v7</strong>. Routes are structured into public views and protected organizer views:</p>
+<pre><code class="language-tsx">&lt;BrowserRouter&gt;
+  &lt;Routes&gt;
+    &lt;Route path=&quot;/&quot; element={&lt;Home /&gt;} /&gt;
+    &lt;Route element={&lt;Layout /&gt;}&gt;
+      {/* Public Routes */}
+      &lt;Route path=&quot;create-event&quot; element={&lt;CreateEvent /&gt;} /&gt;
+      &lt;Route path=&quot;organizer-login&quot; element={&lt;OrganizerLogin /&gt;} /&gt;
+      &lt;Route path=&quot;register/:eventId&quot; element={&lt;Register /&gt;} /&gt;
+      &lt;Route path=&quot;registration-success/:eventId/:teamId&quot; element={&lt;RegistrationSuccess /&gt;} /&gt;
+      &lt;Route path=&quot;ticket/:eventId/:teamId&quot; element={&lt;Ticket /&gt;} /&gt;
+      &lt;Route path=&quot;leaderboard/:eventId&quot; element={&lt;Leaderboard /&gt;} /&gt;
+
+      {/* Protected Organizer Routes */}
+      &lt;Route path=&quot;event-details/:eventId&quot; element={&lt;ProtectedRoute&gt;&lt;EventDetails /&gt;&lt;/ProtectedRoute&gt;} /&gt;
+      &lt;Route path=&quot;dashboard/:eventId&quot; element={&lt;ProtectedRoute&gt;&lt;Dashboard /&gt;&lt;/ProtectedRoute&gt;} /&gt;
+      &lt;Route path=&quot;scan/:eventId&quot; element={&lt;ProtectedRoute&gt;&lt;ScanAttendance /&gt;&lt;/ProtectedRoute&gt;} /&gt;
+
+      &lt;Route path=&quot;*&quot; element={&lt;Navigate to=&quot;/&quot; replace /&gt;} /&gt;
+    &lt;/Route&gt;
+  &lt;/Routes&gt;
+&lt;/BrowserRouter&gt;
+</code></pre>
+<h2>9.4 SESSION MANAGEMENT &amp; AUTHCONTEXT</h2>
+<p>Administrative authentication state is managed via React Context (<code>src/context/AuthContext.tsx</code>):</p>
+<ul>
+<li><strong>Storage Mechanism</strong>: Backed by <code>window.sessionStorage</code> under the key <code>eventra_organizer_session</code>.</li>
+<li><strong>Persistence Boundary</strong>: The session survives page refreshes but is automatically destroyed when the browser tab is closed.</li>
+<li><strong>Event Scoping</strong>: Stores <code>{ isAuthenticated: true, eventId }</code>.</li>
+<li><strong>Route Guard Verification (<code>ProtectedRoute.tsx</code>)</strong>: Inspects whether <code>isAuthenticated === true</code> and verifies that the route&#39;s <code>:eventId</code> parameter matches the active session. If an organizer logged into event <code>event-A</code> attempts to access <code>/dashboard/event-B</code>, an &quot;Access Denied&quot; view is displayed with a switch button.</li>
+</ul>
+<h2>9.5 PAGE MODULES IMPLEMENTATION</h2>
+<h3>9.5.1 Landing Page (<code>Home.tsx</code>)</h3>
+<p>A high-impact public introduction to Eventra featuring dynamic navbar scroll transitions, an animated ambient glow hero, live platform statistic counters, feature grid cards with micro-interactions, an interactive step-by-step workflow preview, simulated boarding pass ticket widgets, and benefits breakdown.</p>
+<h3>9.5.2 Event Creation (<code>CreateEvent.tsx</code>)</h3>
+<p>A multi-field form validating the secret master approval key (<code>APPROVAL_KEY</code>), event ID regex, and password confirmation. Upon submission, it queries RTDB to guarantee the <code>eventId</code> is unique, hashes the password client-side using SHA-256, and provisions the initial database node.</p>
+<h3>9.5.3 Organizer Login (<code>OrganizerLogin.tsx</code>)</h3>
+<p>Authenticates organizers by retrieving the stored password hash from <code>events/{cleanId}/passwordHash</code>, hashing the input password client-side, and verifying equality before invoking <code>login(cleanId)</code>.</p>
+<h3>9.5.4 Event Configuration (<code>EventDetails.tsx</code>)</h3>
+<p>Administrative portal for editing event titles, descriptions, venue, schedules, and registration deadlines. Notably incorporates visual stepper buttons to adjust:</p>
+<ul>
+<li><code>numberOfDays</code> and <code>currentDay</code> (Attendance subsystem).</li>
+<li><code>numberOfRounds</code> and <code>currentRound</code> (Qualification subsystem).</li>
+</ul>
+<h3>9.5.5 Participant Registration (<code>Register.tsx</code>)</h3>
+<p>The public registration form. Evaluates whether registrations are open or deadlines have passed. Dynamically renders member input blocks with &quot;Same college as leader&quot; and &quot;Same branch as leader&quot; replication shortcuts. Upon submission, executes atomic counter locking, writes team records, and registers FCM push tokens.</p>
+<h3>9.5.6 Registration Confirmation (<code>RegistrationSuccess.tsx</code>)</h3>
+<p>Post-registration confirmation screen displaying animated celebration rings, instructions for arrival, and embedding the luxury <code>TicketCard</code> boarding pass.</p>
+<h3>9.5.7 Organizer Dashboard (<code>Dashboard.tsx</code>)</h3>
+<p>The central operations console containing four dedicated views:</p>
+<ol>
+<li><strong>Teams Tab</strong>: Searchable list of all registered teams with per-day attendance dots, round qualification tags, expandable member rosters, and copyable FCM debug tokens.</li>
+<li><strong>Qualified Tab</strong>: Interactive round-by-round management tool. Allows organizers to toggle qualification stars for non-final rounds, or award 1st, 2nd, and 3rd place podium medals in the final round.</li>
+<li><strong>Lookup Tab</strong>: Direct alphanumeric Team ID search returning the team&#39;s QR code and member status.</li>
+<li><strong>Push Broadcast Tab</strong>: Houses the <code>NotificationPanel</code> for composing targeted push notifications.</li>
+</ol>
+<h3>9.5.8 Attendance Scanner (<code>ScanAttendance.tsx</code>)</h3>
+<p>Mobile-optimized gate check-in console displaying the active event day badge. Renders the camera QR scanner, decodes tickets, parses the <code>{eventId}|{teamId}</code> payload, verifies against RTDB, guards against duplicates, renders individual member checkboxes, and commits attendance with millisecond timestamps.</p>
+<h3>9.5.9 Tournament Leaderboard (<code>Leaderboard.tsx</code>)</h3>
+<p>Real-time public rankings display. Features round progress pills, search filtering, finalist counts, podium reveal interactions with confetti bursts, and the GTA V &quot;WASTED&quot; elimination dramatization.</p>
+<h2>9.6 SPECIALIZED UI COMPONENTS</h2>
+<h3>9.6.1 Luxury Boarding Pass Virtualizer (<code>TicketCard.tsx</code>)</h3>
+<p>An airline-style boarding pass styled with luxury gold accents, flight cutouts, barcode notches, and destination labels. It embeds <code>QRCodeDisplay</code> and utilizes <code>html2canvas</code> to capture the DOM tree and trigger an instant PNG download named <code>{eventId}-boarding-pass-{teamId}.png</code>. Explicit color fills are applied to prevent gradient text-fill leakage during canvas rasterization.</p>
+<h3>9.6.2 Optical QR Scanner (<code>QRScanner.tsx</code>)</h3>
+<p>Encapsulates <code>Html5QrcodeScanner</code> within a React lifecycle ref. Configured for 10 FPS scanning, a $250 \times 250\text{ px}$ bounding box, native camera switching, and torch toggle support. Cleans up video streams cleanly upon component unmount.</p>
+<h3>9.6.3 Analytical CSV Export Modal (<code>CSVDownloadModal.tsx</code>)</h3>
+<p>An accessible modal overlay providing one-click exports of:</p>
+<ul>
+<li>All Details CSV (Full team data, roll numbers, branches, per-round qualifications, per-day attendance).</li>
+<li>Round-Qualified CSVs (One dedicated dataset per round).</li>
+<li>Day-Attendance CSVs (One dedicated dataset per event day).</li>
+</ul>
+<h2>9.7 FORM MANAGEMENT, VALIDATION, AND DYNAMIC FIELDS</h2>
+<p>Form handling utilizes controlled React state with field-level validation:</p>
+<ul>
+<li>Input changes trigger instant error clearance.</li>
+<li>Email fields validate standard RFC 5322 regex formatting.</li>
+<li>Dynamic member arrays support real-time addition/removal while respecting <code>teamSizeMin</code> and <code>teamSizeMax</code>.</li>
+</ul>
+<h2>9.8 HARDWARE INTEGRATION: VIBRATION HAPTICS &amp; AUDIO</h2>
+<p>Eventra bridges web software with mobile physical hardware:</p>
+<ul>
+<li><strong>Haptic Feedback (<code>src/lib/haptics.ts</code>)</strong>: Wraps <code>window.navigator.vibrate()</code> into expressive tactile profiles:<ul>
+<li><code>light</code>: $10\text{ ms}$ pulse for checkbox clicks and toggles.</li>
+<li><code>medium</code>: $20\text{ ms}$ pulse for standard button taps.</li>
+<li><code>heavy</code>: $45\text{ ms}$ pulse for significant actions.</li>
+<li><code>success</code>: Rhythmic pulse <code>[10, 50, 15]</code> when attendance is confirmed.</li>
+<li><code>error</code>: Triple jolt <code>[50, 100, 50]</code> on duplicate or invalid scans.</li>
+<li><code>celebration</code>: Multi-pulse burst <code>[60, 40, 60, 40, 100]</code> matching confetti firing.</li>
+<li><code>wasted</code>: Fading throb sequence <code>[120, 60, 80, 80, 60, 100, 40, 120, 30]</code> matching the GTA screen shake.</li>
+</ul>
+</li>
+<li><strong>Audio Feedback</strong>: The leaderboard initializes an audio element loading <code>/gta-v-death-sound-effect-102.mp3</code> when an eliminated team is searched, playing the iconic death sound.</li>
+</ul>
+<h2>9.9 SERVICE WORKER &amp; FOREGROUND NOTIFICATION RECEPTION</h2>
+<p>Push message reception operates in two distinct operational states:</p>
+<ol>
+<li><strong>Background / Tab Closed</strong>: Managed by <code>public/firebase-messaging-sw.js</code>. The Service Worker receives raw FCM payloads via <code>messaging.onBackgroundMessage()</code> and triggers native OS system tray notifications via <code>self.registration.showNotification()</code>.</li>
+<li><strong>Foreground / Tab Active</strong>: Managed by <code>NotificationPrompt.tsx</code> using <code>onMessage(messaging, callback)</code>. Instead of interrupting the user with OS popups, it displays a luxury floating toast in the top-right corner, accompanied by a light haptic pulse, automatically dismissing after 7 seconds.</li>
+</ol>
+<hr>
+
+</body>
+</html>
