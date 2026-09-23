@@ -1,5 +1,4 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getDatabase } from 'firebase/database';
 
 export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -8,14 +7,10 @@ export const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
 };
 
-// Initialize Firebase
+// Initialize Firebase App for optional Cloud Messaging (FCM)
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-
-// Initialize Realtime Database
-export const db = getDatabase(app);
 
 export default app;
 

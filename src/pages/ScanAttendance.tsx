@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { ref, get, update } from 'firebase/database';
-import { db } from '@/lib/firebase';
+import { getEvent, getTeam, updateDayAttendance, mapEventRowToSettings } from '@/lib/supabase';
 import { withRetry } from '@/lib/db-retry';
 import { haptic } from '@/lib/haptics';
 import type { TeamWithId } from '@/types';
@@ -82,9 +81,9 @@ export const ScanAttendance: React.FC = () => {
     if (!eventId) return;
     const load = async () => {
       try {
-        const snap = await withRetry(() => get(ref(db, `events/${eventId}/eventSettings`)));
-        if (snap.exists()) {
-          const s = snap.val();
+        const eventData = await withRetry(() => getEvent(eventId));
+        if (eventData) {
+          const s = mapEventRowToSettings(eventData);
           setCurrentDay(s.currentDay ?? 1);
           setTotalDays(s.numberOfDays ?? 1);
         }
@@ -116,13 +115,12 @@ export const ScanAttendance: React.FC = () => {
         setScanState('error'); return;
       }
 
-      const teamSnap = await withRetry(() => get(ref(db, `events/${scannedEventId}/teams/${teamCode}`)));
-      if (!teamSnap.exists()) {
+      const teamData = await withRetry(() => getTeam(scannedEventId, teamCode));
+      if (!teamData) {
         setErrorMsg(`Team "${scannedTeamId}" not found in database.`);
         haptic.error();
         setScanState('error'); return;
       }
-      const teamData = { id: scannedTeamId, ...teamSnap.val() } as TeamWithId;
 
       // Check if attendance for THIS day is already marked
       const dayKey = String(currentDay);
@@ -151,21 +149,8 @@ export const ScanAttendance: React.FC = () => {
     try {
       const updatedMembers = team.members.map((m, i) => ({ ...m, present: memberPresence[i] }));
       const teamCode = team.id.split('-').pop() || team.id;
-      const dayKey = String(currentDay);
 
-      const updates: Record<string, unknown> = {
-        [`dayAttendance/${dayKey}/marked`]: true,
-        [`dayAttendance/${dayKey}/members`]: updatedMembers,
-        [`dayAttendance/${dayKey}/markedAt`]: Date.now(),
-      };
-
-      // Keep legacy attendanceMarked in sync for Day 1
-      if (currentDay === 1) {
-        updates.attendanceMarked = true;
-        updates.members = updatedMembers;
-      }
-
-      await withRetry(() => update(ref(db, `events/${eventId}/teams/${teamCode}`), updates));
+      await withRetry(() => updateDayAttendance(eventId, teamCode, currentDay, true, updatedMembers));
       haptic.success();
       setScanState('success');
     } catch (err) {

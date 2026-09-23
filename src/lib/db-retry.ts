@@ -18,7 +18,7 @@ export async function withRetry<T>(
     }
 
     // Log the retry attempt for debugging
-    console.warn(`Firestore operation failed. Retrying... (${retries} attempts left)`, err);
+    console.warn(`Database operation failed. Retrying... (${retries} attempts left)`, err);
 
     // Wait before retrying
     await new Promise((resolve) => setTimeout(resolve, delay));

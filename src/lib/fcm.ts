@@ -3,9 +3,8 @@
 // ============================================================
 
 import { getMessaging, getToken, onMessage, isSupported, type Messaging } from 'firebase/messaging';
-import { ref, set, update, serverTimestamp } from 'firebase/database';
-import app, { db } from './firebase';
-import { withRetry } from './db-retry';
+import app from './firebase';
+import { storeVisitorTokenInSupabase, associateTokenWithTeamInSupabase } from './supabase';
 import type { VisitorFcmToken, TeamFcmToken } from '@/types';
 
 // VAPID Public Web Push Key from environment (optional, standard FCM web push configuration)
@@ -169,8 +168,8 @@ export async function requestPermissionAndGetToken(): Promise<{
 }
 
 /**
- * Store a general visitor FCM registration token in Firebase Realtime Database.
- * Prevents duplicates by using a sanitized token key and caching synced state.
+ * Store a general visitor FCM registration token in Supabase database.
+ * Prevents duplicates by caching synced state in local storage.
  */
 export async function storeVisitorTokenInDatabase(token: string): Promise<void> {
   if (!token) return;
@@ -182,33 +181,17 @@ export async function storeVisitorTokenInDatabase(token: string): Promise<void> 
   }
 
   try {
-    const tokenKey = sanitizeTokenKey(token);
-    const visitorData: Partial<VisitorFcmToken> & { updatedAt: any; createdAt?: any } = {
-      token,
-      updatedAt: serverTimestamp(),
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-      platform: typeof navigator !== 'undefined' ? navigator.platform : '',
-      language: typeof navigator !== 'undefined' ? navigator.language : 'en',
-    };
-
-    // Store in `fcmTokens/visitors/<tokenKey>`
-    await withRetry(() => set(ref(db, `fcmTokens/visitors/${tokenKey}`), {
-      ...visitorData,
-      createdAt: serverTimestamp(),
-    }));
-
+    await storeVisitorTokenInSupabase(token);
     localStorage.setItem(STORAGE_KEY_SYNCED, token);
-    console.log('[FCM] General visitor token stored in RTDB under fcmTokens/visitors');
+    console.log('[FCM] General visitor token stored in Supabase under fcm_visitor_tokens');
   } catch (err) {
-    console.error('[FCM] Failed to store visitor token in Realtime Database:', err);
+    console.error('[FCM] Failed to store visitor token in Supabase:', err);
   }
 }
 
 /**
- * Associate an FCM registration token with a registered team.
- * Keeps registered-team tokens categorized and updates both:
- * 1. `fcmTokens/teams/<eventId>/<teamCode>`
- * 2. `events/<eventId>/teams/<teamCode>/fcmToken`
+ * Associate an FCM registration token with a registered team in Supabase.
+ * Updates both fcm_team_tokens and teams.fcm_token.
  */
 export async function associateTokenWithTeam(
   eventId: string,
@@ -219,28 +202,10 @@ export async function associateTokenWithTeam(
   if (!eventId || !teamCode || !token) return;
 
   try {
-    const teamTokenData: Partial<TeamFcmToken> & { updatedAt: any } = {
-      token,
-      teamId: teamMetadata.teamId,
-      teamName: teamMetadata.teamName,
-      leader: teamMetadata.leader,
-      email: teamMetadata.email || '',
-      eventId,
-      updatedAt: serverTimestamp(),
-    };
-
-    // 1. Store in team tokens index: `fcmTokens/teams/<eventId>/<teamCode>`
-    await withRetry(() => set(ref(db, `fcmTokens/teams/${eventId}/${teamCode}`), teamTokenData));
-
-    // 2. Also attach directly to the team record for fast team-level lookup:
-    await withRetry(() => update(ref(db, `events/${eventId}/teams/${teamCode}`), {
-      fcmToken: token,
-      fcmTokenUpdatedAt: serverTimestamp(),
-    }));
-
-    console.log(`[FCM] Successfully associated FCM token with team ${teamMetadata.teamId} (${teamCode})`);
+    await associateTokenWithTeamInSupabase(eventId, teamCode, token, teamMetadata);
+    console.log(`[FCM] Successfully associated FCM token with team ${teamMetadata.teamId} in Supabase`);
   } catch (err) {
-    console.error('[FCM] Failed to associate token with team:', err);
+    console.error('[FCM] Failed to associate token with team in Supabase:', err);
   }
 }
 
