@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { ref, get } from 'firebase/database';
 import confetti from 'canvas-confetti';
 import { haptic } from '@/lib/haptics';
-import { db } from '@/lib/firebase';
+import { getEvent, getTeams, mapEventRowToDetails, mapEventRowToSettings } from '@/lib/supabase';
 import { withRetry } from '@/lib/db-retry';
 import type { TeamWithId, EventDetails as EventDetailsType } from '@/types';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -107,35 +106,27 @@ export const Leaderboard: React.FC = () => {
     if (!eventId) return;
     const load = async () => {
       try {
-        const [detailsSnap, teamsSnap, settingsSnap] = await Promise.all([
-          withRetry(() => get(ref(db, `events/${eventId}/details`))),
-          withRetry(() => get(ref(db, `events/${eventId}/teams`))),
-          withRetry(() => get(ref(db, `events/${eventId}/eventSettings`))),
+        const [eventData, teamList] = await Promise.all([
+          withRetry(() => getEvent(eventId)),
+          withRetry(() => getTeams(eventId)),
         ]);
-        if (detailsSnap.exists()) setEventDetails(detailsSnap.val() as EventDetailsType);
-        if (settingsSnap.exists()) {
-          const s = settingsSnap.val();
+        if (eventData) {
+          setEventDetails(mapEventRowToDetails(eventData));
+          const s = mapEventRowToSettings(eventData);
           setCurrentRound(s.currentRound ?? 1);
           setTotalRounds(s.numberOfRounds ?? 1);
           setCurrentDay(s.currentDay ?? 1);
           setTotalDays(s.numberOfDays ?? 1);
         }
-        const teamData = teamsSnap.val();
-        const list: TeamWithId[] = [];
-        if (teamData) {
-          Object.keys(teamData).forEach((code) => {
-            const t = teamData[code];
-            list.push({ id: t.teamId || `${eventId}-${code}`, ...t } as TeamWithId);
-          });
-        }
+
         // Sort by position first (1,2,3), then alphabetically
-        list.sort((a, b) => {
+        teamList.sort((a, b) => {
           const pa = a.position ?? 999;
           const pb = b.position ?? 999;
           if (pa !== pb) return pa - pb;
           return a.teamName.localeCompare(b.teamName);
         });
-        setTeams(list);
+        setTeams(teamList);
       } catch (err) {
         console.error('Leaderboard load error:', err);
       } finally {

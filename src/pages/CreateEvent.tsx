@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ref, get, set, serverTimestamp } from 'firebase/database';
-import { db } from '@/lib/firebase';
+import { getEvent, createEvent } from '@/lib/supabase';
 import { withRetry } from '@/lib/db-retry';
 import { APPROVAL_KEY } from '@/lib/constants';
 import { hashPassword, isValidEventId } from '@/lib/utils';
@@ -44,20 +43,19 @@ export const CreateEvent: React.FC = () => {
     setLoading(true);
     try {
       const eventIdClean = form.eventId.trim().toLowerCase();
-      const eventRef = ref(db, `events/${eventIdClean}`);
-      const existing = await withRetry(() => get(eventRef));
-      if (existing.exists()) {
+      const existing = await withRetry(() => getEvent(eventIdClean));
+      if (existing) {
         setErrors((prev) => ({ ...prev, eventId: 'This Event ID is already taken. Choose another.' }));
         setLoading(false);
         return;
       }
       const passwordHash = await hashPassword(form.password);
-      await withRetry(() => set(eventRef, { passwordHash, createdAt: serverTimestamp(), teamCount: 0 }));
+      await withRetry(() => createEvent(eventIdClean, passwordHash));
       setCreatedEventId(eventIdClean);
       setStep('success');
     } catch (err: any) {
-      const isNetworkError = !navigator.onLine || err.message?.includes('offline') || err.code === 'PERMISSION_DENIED';
-      setErrors({ submit: isNetworkError ? 'Network error: check your connection or database config.' : 'Failed to create event. ' + (err.message || 'Unknown error') });
+      const isNetworkError = !navigator.onLine || err.message?.includes('offline') || err.message?.includes('Failed to fetch');
+      setErrors({ submit: isNetworkError ? 'Network error: check your connection or Supabase config.' : 'Failed to create event. ' + (err.message || 'Unknown error') });
     } finally {
       setLoading(false);
     }

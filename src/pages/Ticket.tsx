@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ref, get } from 'firebase/database';
-import { db } from '@/lib/firebase';
+import { getEvent, getTeam, mapEventRowToDetails } from '@/lib/supabase';
 import { withRetry } from '@/lib/db-retry';
 import { GlassCard } from '@/components/GlassCard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -21,13 +20,13 @@ export const Ticket: React.FC = () => {
       if (!eventId || !teamId) return;
       try {
         const teamCode = teamId.split('-').pop() || teamId;
-        const [teamSnap, detailsSnap] = await Promise.all([
-          withRetry(() => get(ref(db, `events/${eventId}/teams/${teamCode}`))),
-          withRetry(() => get(ref(db, `events/${eventId}/details`)))
+        const [teamData, eventData] = await Promise.all([
+          withRetry(() => getTeam(eventId, teamCode)),
+          withRetry(() => getEvent(eventId)),
         ]);
-        if (teamSnap.exists() && detailsSnap.exists()) {
-          setTeam({ id: teamSnap.key!, ...teamSnap.val() } as TeamWithId);
-          setEventDetails(detailsSnap.val() as EventDetailsType);
+        if (teamData && eventData) {
+          setTeam(teamData);
+          setEventDetails(mapEventRowToDetails(eventData));
         }
       } catch (err) {
         console.error('Failed to load ticket data:', err);
@@ -60,8 +59,8 @@ export const Ticket: React.FC = () => {
   const qrValue = `${eventId}|${teamId}`;
 
   return (
-    <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '3rem 1.5rem', gap: '2rem' }}>
-      <div className="ev-section-label" style={{ letterSpacing: '0.14em' }}>YOUR TICKET</div>
+    <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '3rem 1.5rem', gap: '1.5rem', width: '100%', maxWidth: 960, margin: '0 auto' }}>
+      <div className="ev-section-label" style={{ letterSpacing: '0.14em' }}>OFFICIAL EVENT PASS</div>
       <TicketCard eventId={eventId!} teamId={teamId!} team={team} eventDetails={eventDetails} qrValue={qrValue} />
       <div style={{ display: 'flex', justifyContent: 'center' }}>
         <Link to="/" style={{ textDecoration: 'none' }}>

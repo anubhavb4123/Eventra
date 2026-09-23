@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ref, get, update } from 'firebase/database';
-import { db } from '@/lib/firebase';
+import { getEvent, getTeam, mapEventRowToDetails } from '@/lib/supabase';
 import { withRetry } from '@/lib/db-retry';
-import { GlassCard } from '@/components/GlassCard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Home } from 'lucide-react';
 import { TicketCard } from '@/components/TicketCard';
@@ -23,16 +21,14 @@ export const RegistrationSuccess: React.FC = () => {
       if (!eventId || !teamId) return;
       try {
         const teamCode = teamId.split('-').pop() || teamId;
-        const [snap, detailsSnap] = await Promise.all([
-          withRetry(() => get(ref(db, `events/${eventId}/teams/${teamCode}`))),
-          withRetry(() => get(ref(db, `events/${eventId}/details`)))
+        const [teamData, eventData] = await Promise.all([
+          withRetry(() => getTeam(eventId, teamCode)),
+          withRetry(() => getEvent(eventId)),
         ]);
-        if (snap.exists() && detailsSnap.exists()) {
-          const tData = snap.val();
-          const dData = detailsSnap.val();
-          setTeamName(tData.teamName);
-          setTeam({ id: teamCode, ...tData });
-          setEventDetails(dData);
+        if (teamData && eventData) {
+          setTeamName(teamData.teamName);
+          setTeam(teamData);
+          setEventDetails(mapEventRowToDetails(eventData));
         }
       } catch (e) {
         console.error('Load Registration Success Error:', e);
@@ -54,7 +50,7 @@ export const RegistrationSuccess: React.FC = () => {
 
   return (
     <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem 1.5rem' }}>
-      <div style={{ maxWidth: 500, width: '100%', opacity: show ? 1 : 0, transform: show ? 'translateY(0)' : 'translateY(16px)', transition: 'all 0.5s ease' }}>
+      <div style={{ maxWidth: 920, width: '100%', opacity: show ? 1 : 0, transform: show ? 'translateY(0)' : 'translateY(16px)', transition: 'all 0.5s ease' }}>
 
         {/* Hero */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
@@ -92,31 +88,15 @@ export const RegistrationSuccess: React.FC = () => {
           </div>
         )}
 
-        {/* Steps */}
-        <GlassCard padding="sm" style={{ marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[
-              { emoji: '1️⃣', text: 'Download or screenshot your QR code.' },
-              { emoji: '2️⃣', text: 'Show it to the organizer when you arrive.' },
-              { emoji: '3️⃣', text: 'Your attendance will be marked by scanning.' },
-            ].map((item) => (
-              <div key={item.emoji} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                <span style={{ fontSize: '1rem', flexShrink: 0 }}>{item.emoji}</span>
-                <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: '#666', margin: 0, lineHeight: 1.6 }}>{item.text}</p>
-              </div>
-            ))}
-          </div>
-        </GlassCard>
-
         {/* Nav */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ maxWidth: 420, margin: '0.5rem auto 0', display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
           <Link to="/" style={{ textDecoration: 'none' }}>
             <button className="ev-btn ev-btn-ghost ev-btn-full" style={{ gap: 8 }}>
               <Home size={14} /> Back to Home
             </button>
           </Link>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem', color: '#333', textAlign: 'center', margin: 0 }}>
-            💡 Save or download your QR code — contact the organizer if you lose it.
+          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.68rem', color: '#444', textAlign: 'center', margin: 0 }}>
+            💡 Save your boarding pass to your device before arriving at the venue.
           </p>
         </div>
       </div>

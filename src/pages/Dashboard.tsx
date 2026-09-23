@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ref, get, update } from 'firebase/database';
-import { db } from '@/lib/firebase';
+import {
+  getEvent,
+  getTeams,
+  getTeam,
+  toggleRoundQualification,
+  setTeamPosition,
+  mapEventRowToDetails,
+  mapEventRowToSettings
+} from '@/lib/supabase';
 import { withRetry } from '@/lib/db-retry';
 import type { TeamWithId, EventDetails as EventDetailsType, DashboardStats } from '@/types';
 import { exportAllDetailsCSV, exportRoundQualifiedCSV, exportDayAttendanceCSV } from '@/lib/utils';
@@ -148,14 +155,14 @@ export const Dashboard: React.FC = () => {
     if (!eventId) return;
     setLoading(true);
     try {
-      const [detailsSnap, teamsSnap, settingsSnap] = await Promise.all([
-        withRetry(() => get(ref(db, `events/${eventId}/details`))),
-        withRetry(() => get(ref(db, `events/${eventId}/teams`))),
-        withRetry(() => get(ref(db, `events/${eventId}/eventSettings`))),
+      const [eventData, teamList] = await Promise.all([
+        withRetry(() => getEvent(eventId)),
+        withRetry(() => getTeams(eventId)),
       ]);
-      if (detailsSnap.exists()) setEventDetails(detailsSnap.val() as EventDetailsType);
-      if (settingsSnap.exists()) {
-        const s = settingsSnap.val();
+
+      if (eventData) {
+        setEventDetails(mapEventRowToDetails(eventData));
+        const s = mapEventRowToSettings(eventData);
         const day = s.currentDay ?? 1;
         const round = s.currentRound ?? 1;
         setCurrentDay(day);
@@ -164,15 +171,7 @@ export const Dashboard: React.FC = () => {
         setTotalRounds(s.numberOfRounds ?? 1);
         setViewingRound(round);
       }
-      const teamsData = teamsSnap.val();
-      const teamList: TeamWithId[] = [];
-      if (teamsData) {
-        Object.keys(teamsData).forEach((teamCode) => {
-          const tData = teamsData[teamCode];
-          const fullId = tData.teamId || `${eventId}-${teamCode}`;
-          teamList.push({ id: fullId, ...tData } as TeamWithId);
-        });
-      }
+
       teamList.sort((a, b) => a.id.localeCompare(b.id));
       setTeams(teamList);
       const totalMembers = teamList.reduce((acc, t) => acc + t.members.length, 0);
@@ -218,9 +217,9 @@ export const Dashboard: React.FC = () => {
     if (evId !== eventId) { setLookupError(`That team belongs to event "${evId}", not "${eventId}".`); return; }
     setLookupLoading(true); setLookupError(''); setLookupTeam(null);
     try {
-      const snap = await withRetry(() => get(ref(db, `events/${evId}/teams/${teamCode}`)));
-      if (!snap.exists()) { setLookupError(`No team found with ID "${trimmed}".`); return; }
-      setLookupTeam({ id: trimmed, ...snap.val() } as TeamWithId);
+      const foundTeam = await withRetry(() => getTeam(evId, teamCode));
+      if (!foundTeam) { setLookupError(`No team found with ID "${trimmed}".`); return; }
+      setLookupTeam(foundTeam);
     } catch (err) {
       console.error('Lookup Error:', err);
       setLookupError('Lookup failed. Check your connection.');
@@ -237,9 +236,7 @@ export const Dashboard: React.FC = () => {
     const currentlyQualified = team.qualifications?.[roundKey] ?? false;
     setQualifyingTeam(`${team.id}-${round}`);
     try {
-      await withRetry(() => update(ref(db, `events/${eventId}/teams/${teamCode}`), {
-        [`qualifications/${roundKey}`]: !currentlyQualified,
-      }));
+      await withRetry(() => toggleRoundQualification(eventId, teamCode, round, !currentlyQualified));
       // Optimistic update
       setTeams(prev => prev.map(t =>
         t.id === team.id
@@ -262,16 +259,10 @@ export const Dashboard: React.FC = () => {
 
     // Find any other team that currently holds this position and clear it
     const prevHolder = !alreadyThis ? teams.find(t => t.id !== team.id && t.position === pos) : null;
+    const prevCode = prevHolder ? (prevHolder.id.split('-').pop() || prevHolder.id) : null;
 
     try {
-      const writes: Promise<void>[] = [
-        withRetry(() => update(ref(db, `events/${eventId}/teams/${teamCode}`), { position: newPos })),
-      ];
-      if (prevHolder) {
-        const prevCode = prevHolder.id.split('-').pop() || prevHolder.id;
-        writes.push(withRetry(() => update(ref(db, `events/${eventId}/teams/${prevCode}`), { position: null })));
-      }
-      await Promise.all(writes);
+      await withRetry(() => setTeamPosition(eventId, teamCode, newPos, prevCode));
       // Optimistic update
       setTeams(prev => prev.map(t => {
         if (t.id === team.id) return { ...t, position: newPos ?? undefined };

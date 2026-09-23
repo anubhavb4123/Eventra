@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ref, get, set, runTransaction, serverTimestamp } from 'firebase/database';
-import { db } from '@/lib/firebase';
-import { generateTeamId, formatDate } from '@/lib/utils';
+import { getEvent, registerTeam, mapEventRowToDetails, mapEventRowToSettings } from '@/lib/supabase';
+import { formatDate } from '@/lib/utils';
 import { withRetry } from '@/lib/db-retry';
 import { haptic } from '@/lib/haptics';
 import { GlassCard } from '@/components/GlassCard';
@@ -140,15 +139,10 @@ export const Register: React.FC = () => {
     const loadEvent = async () => {
       if (!eventId) return;
       try {
-        const [eventSnap, detailsSnap, settingsSnap] = await Promise.all([
-          withRetry(() => get(ref(db, `events/${eventId}`))),
-          withRetry(() => get(ref(db, `events/${eventId}/details`))),
-          withRetry(() => get(ref(db, `events/${eventId}/eventSettings`))),
-        ]);
-        if (!eventSnap.exists() || !detailsSnap.exists()) { setNotFound(true); return; }
-        const d = detailsSnap.val() as EventDetailsType;
-        const eData = eventSnap.val();
-        const s = (settingsSnap.val() || { registrationOpen: true, registrationDeadline: (d as any).registrationDeadline, currentTeams: eData.teamCount || 0 }) as EventSettings;
+        const eventData = await withRetry(() => getEvent(eventId));
+        if (!eventData) { setNotFound(true); return; }
+        const d = mapEventRowToDetails(eventData);
+        const s = mapEventRowToSettings(eventData);
         setEventDetails(d);
         setEventSettings(s);
         if (s.registrationDeadline && new Date(s.registrationDeadline) < new Date()) setDeadlinePassed(true);
@@ -204,21 +198,6 @@ export const Register: React.FC = () => {
     if (!validateForm() || !eventId) return;
     setSubmitting(true);
     try {
-      if (email) {
-        const emailKey = email.toLowerCase().replace(/\./g, ',');
-        const emailSnap = await withRetry(() => get(ref(db, `events/${eventId}/registeredEmails/${emailKey}`)));
-        if (emailSnap.exists()) { setErrors({ submit: 'This email is already registered for this event.' }); setSubmitting(false); return; }
-      }
-      const result = await runTransaction(ref(db, `events/${eventId}/eventSettings/currentTeams`), (current) => {
-        const count = current || 0;
-        if (eventSettings?.maxTeams && count >= eventSettings.maxTeams) return;
-        return count + 1;
-      });
-      if (!result.committed) { setErrors({ submit: 'Registration full. No more teams can be accepted.' }); setSubmitting(false); return; }
-      const newCount = result.snapshot.val();
-      const teamId = generateTeamId(eventId, newCount);
-      const teamCode = teamId.split('-').pop() || teamId;
-
       // Handle FCM Push Notification opt-in
       let fcmToken: string | null = null;
       if (notifyOptIn) {
@@ -240,43 +219,34 @@ export const Register: React.FC = () => {
           present: false
         })),
       ];
-      const updates: any = {};
-      updates[`events/${eventId}/teams/${teamCode}`] = {
-        teamId,
+
+      const registeredTeam = await registerTeam({
+        eventId,
         teamName,
         leader,
-        email: email || null,
+        email: email || undefined,
         members: allMembers,
-        attendanceMarked: false,
-        createdAt: serverTimestamp(),
-        ...(fcmToken ? { fcmToken, fcmTokenUpdatedAt: serverTimestamp() } : {}),
-      };
-      if (email) { const emailKey = email.toLowerCase().replace(/\./g, ','); updates[`events/${eventId}/registeredEmails/${emailKey}`] = true; }
-      await Object.keys(updates).reduce(async (promise, path) => {
-        await promise;
-        const keys = path.split('/'); const prop = keys.pop()!; const base = keys.join('/');
-        return withRetry(() => set(ref(db, `${base}/${prop}`), updates[path]));
-      }, Promise.resolve());
-
-      // If FCM token was generated, associate it with team in fcmTokens/teams node
-      if (fcmToken) {
-        try {
-          await associateTokenWithTeam(eventId, teamCode, fcmToken, {
-            teamId,
-            teamName,
-            leader,
-            email: email || undefined,
-          });
-        } catch (assocErr) {
-          console.warn('[FCM] Associate token with team error:', assocErr);
-        }
-      }
+        fcmToken: fcmToken || null,
+      });
 
       haptic.success();
-      navigate(`/registration-success/${eventId}/${teamId}`);
-    } catch (err) {
+      navigate(`/registration-success/${eventId}/${registeredTeam.id}`);
+    } catch (err: any) {
       console.error('Registration Error:', err);
-      setErrors({ submit: 'Registration failed. Check your connection and try again.' });
+      const rawMessage = err?.message || '';
+      let displayError = 'Registration failed. Check your connection and try again.';
+      if (rawMessage.includes('already registered')) {
+        displayError = 'This email is already registered for this event.';
+      } else if (rawMessage.includes('Registration full') || rawMessage.includes('Maximum capacity')) {
+        displayError = 'Registration full. No more teams can be accepted.';
+      } else if (rawMessage.includes('Registration is closed')) {
+        displayError = 'Registration is closed for this event.';
+      } else if (rawMessage.includes('deadline')) {
+        displayError = 'Registration deadline has passed.';
+      } else if (rawMessage) {
+        displayError = rawMessage;
+      }
+      setErrors({ submit: displayError });
     } finally {
       setSubmitting(false);
     }

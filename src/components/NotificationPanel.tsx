@@ -4,8 +4,7 @@ import { Input } from './Input';
 import { Textarea } from './Textarea';
 import { Button } from './Button';
 import { BellRing, AlertCircle, CheckCheck, Send, Users, Trophy, Award, CheckSquare, Square, Clock } from 'lucide-react';
-import { ref, push, onValue, serverTimestamp } from 'firebase/database';
-import { db } from '@/lib/firebase';
+import { queueNotification, getRecentQueuedNotifications, subscribeToNotificationQueue } from '@/lib/supabase';
 import { withRetry } from '@/lib/db-retry';
 import type { TeamWithId } from '@/types';
 
@@ -61,30 +60,22 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ eventId, e
 
   const recipientTeams = getRecipientTeams();
 
-  // Listen to recent queued broadcasts in RTDB
+  // Listen to recent queued broadcasts in Supabase
   useEffect(() => {
     if (!eventId) return;
-    const queueRef = ref(db, `notificationQueue/${eventId}`);
-    const unsubscribe = onValue(queueRef, (snapshot) => {
-      if (!snapshot.exists()) {
-        setRecentQueue([]);
-        return;
+
+    const loadQueue = async () => {
+      try {
+        const items = await getRecentQueuedNotifications(eventId, 5);
+        setRecentQueue(items as QueuedItem[]);
+      } catch (err) {
+        console.warn('Failed to load notification queue:', err);
       }
-      const data = snapshot.val();
-      const list: QueuedItem[] = Object.entries(data).map(([id, val]: [string, any]) => ({
-        id,
-        title: val.title || '',
-        body: val.body || '',
-        target: val.target || 'all_teams',
-        targetRound: val.targetRound,
-        teamCodes: val.teamCodes,
-        createdAt: val.createdAt || Date.now(),
-        processed: !!val.processed,
-        processedAt: val.processedAt,
-        result: val.result,
-      }));
-      list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-      setRecentQueue(list.slice(0, 5));
+    };
+
+    loadQueue();
+    const unsubscribe = subscribeToNotificationQueue(eventId, () => {
+      loadQueue();
     });
 
     return () => unsubscribe();
@@ -120,18 +111,14 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ eventId, e
     setStatus(null);
 
     try {
-      const queueRef = ref(db, `notificationQueue/${eventId}`);
       await withRetry(async () => {
-        await push(queueRef, {
+        await queueNotification(eventId, {
           title: title.trim(),
           body: body.trim(),
           target,
           ...(target === 'qualified_round' ? { targetRound: selectedRound } : {}),
           ...(target === 'specific_teams' ? { teamCodes: selectedTeamCodes } : {}),
           url: url.trim() || `/register/${eventId}`,
-          createdAt: serverTimestamp(),
-          processed: false,
-          source: 'organizer_dashboard',
         });
       });
 

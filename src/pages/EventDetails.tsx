@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ref, get, set } from 'firebase/database';
-import { db } from '@/lib/firebase';
+import { getEvent, updateEventDetailsAndSettings, mapEventRowToDetails, mapEventRowToSettings } from '@/lib/supabase';
 import { withRetry } from '@/lib/db-retry';
 import { GlassCard } from '@/components/GlassCard';
 import { Input } from '@/components/Input';
@@ -134,22 +133,19 @@ export const EventDetails: React.FC = () => {
       if (!eventId) return;
       setLoading(true);
       try {
-        const [detailsSnap, settingsSnap] = await Promise.all([
-          withRetry(() => get(ref(db, `events/${eventId}/details`))),
-          withRetry(() => get(ref(db, `events/${eventId}/eventSettings`))),
-        ]);
-        if (detailsSnap.exists() || settingsSnap.exists()) {
-          const data = detailsSnap.val() || {};
-          const s = settingsSnap.val() || {};
+        const eventData = await withRetry(() => getEvent(eventId));
+        if (eventData) {
+          const d = mapEventRowToDetails(eventData);
+          const s = mapEventRowToSettings(eventData);
           setForm({
-            eventName: data.eventName ?? '',
-            description: data.description ?? '',
-            dateTime: data.dateTime ?? '',
-            teamSizeMin: String(data.teamSizeMin ?? 1),
-            teamSizeMax: String(data.teamSizeMax ?? 5),
-            venue: data.venue ?? '',
-            registrationDeadline: s.registrationDeadline ?? data.registrationDeadline ?? '',
-            paymentLink: data.paymentLink ?? '',
+            eventName: d.eventName ?? '',
+            description: d.description ?? '',
+            dateTime: d.dateTime ?? '',
+            teamSizeMin: String(d.teamSizeMin ?? 1),
+            teamSizeMax: String(d.teamSizeMax ?? 5),
+            venue: d.venue ?? '',
+            registrationDeadline: s.registrationDeadline ?? '',
+            paymentLink: d.paymentLink ?? '',
             registrationOpen: s.registrationOpen ?? true,
             maxTeams: s.maxTeams ? String(s.maxTeams) : '',
             numberOfDays: String(s.numberOfDays ?? 1),
@@ -186,31 +182,33 @@ export const EventDetails: React.FC = () => {
     if (!validate() || !eventId) return;
     setSaving(true);
     try {
-      const settingsSnap = await withRetry(() => get(ref(db, `events/${eventId}/eventSettings`)));
-      const current = settingsSnap.val() || { currentTeams: 0 };
       const totalDays = Number(form.numberOfDays);
       const totalRounds = Number(form.numberOfRounds);
       const safeDay = Math.min(Math.max(form.currentDay, 1), totalDays);
       const safeRound = Math.min(Math.max(form.currentRound, 1), totalRounds);
 
-      await Promise.all([
-        withRetry(() => set(ref(db, `events/${eventId}/details`), {
-          eventName: form.eventName, description: form.description, dateTime: form.dateTime,
-          teamSizeMin: Number(form.teamSizeMin), teamSizeMax: Number(form.teamSizeMax),
-          venue: form.venue, paymentLink: form.paymentLink || null,
-        })),
-        withRetry(() => set(ref(db, `events/${eventId}/eventSettings`), {
-          ...current,
+      await withRetry(() => updateEventDetailsAndSettings(
+        eventId,
+        {
+          eventName: form.eventName,
+          description: form.description,
+          dateTime: form.dateTime,
+          teamSizeMin: Number(form.teamSizeMin),
+          teamSizeMax: Number(form.teamSizeMax),
+          venue: form.venue,
+          paymentLink: form.paymentLink || undefined,
+        },
+        {
           registrationOpen: form.registrationOpen,
-          registrationDeadline: form.registrationDeadline || null,
-          maxTeams: form.maxTeams ? Number(form.maxTeams) : null,
-          currentTeams: current.currentTeams || 0,
+          registrationDeadline: form.registrationDeadline || undefined,
+          maxTeams: form.maxTeams ? Number(form.maxTeams) : undefined,
           numberOfDays: totalDays,
           currentDay: safeDay,
           numberOfRounds: totalRounds,
           currentRound: safeRound,
-        })),
-      ]);
+        }
+      ));
+
       setForm(f => ({ ...f, currentDay: safeDay, currentRound: safeRound }));
       setSaved(true);
       setExisting(true);

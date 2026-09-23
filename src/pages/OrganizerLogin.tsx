@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ref, get } from 'firebase/database';
-import { db } from '@/lib/firebase';
+import { getEvent } from '@/lib/supabase';
 import { verifyPassword } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { withRetry } from '@/lib/db-retry';
@@ -33,17 +32,19 @@ export const OrganizerLogin: React.FC = () => {
     setLoading(true);
     try {
       const cleanId = eventId.trim().toLowerCase();
-      const snap = await withRetry(() => get(ref(db, `events/${cleanId}`)));
-      if (!snap.exists()) { setErrors({ eventId: 'Event not found. Check the Event ID.' }); return; }
-      const { passwordHash } = snap.val();
+      const eventData = await withRetry(() => getEvent(cleanId));
+      if (!eventData) { setErrors({ eventId: 'Event not found. Check the Event ID.' }); return; }
+      const passwordHash = eventData.password_hash;
       const valid = await verifyPassword(password, passwordHash);
       if (!valid) { setErrors({ password: 'Incorrect password.' }); return; }
       login(cleanId);
       const dest = from.includes('event-details') || from.includes('dashboard') || from.includes('scan') ? from : `/dashboard/${cleanId}`;
       navigate(dest, { replace: true });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setErrors({ submit: 'Login failed. Check your Firebase configuration.' });
+      const isNetwork = !navigator.onLine || err?.message?.includes('Failed to fetch') || err?.message?.includes('NetworkError');
+      const msg = err?.message || 'Login failed. Check your Supabase configuration or network connection.';
+      setErrors({ submit: isNetwork ? 'Network error: could not reach database.' : msg });
     } finally {
       setLoading(false);
     }
