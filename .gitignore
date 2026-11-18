@@ -8,6 +8,7 @@ dist/
 dist-ssr/
 *.local
 
+
 # Environment variables (NEVER commit this)
 .env
 .env.local
